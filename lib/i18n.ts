@@ -40,6 +40,8 @@ export const t = {
   dailyEntry:      { ur: 'روزانہ داخلہ',            en: 'Daily Entry' },
   liveWeight:      { ur: 'زندہ وزن (kg)',            en: 'Live Weight (kg)' },
   purchaseCost:    { ur: 'خریداری قیمت (Rs)',        en: 'Purchase Cost (Rs)' },
+  purchaseRate:    { ur: 'خریداری ریٹ (Rs/kg)',       en: 'Purchase Rate (Rs/kg)' },
+  totalCostCalc:   { ur: 'کل خریداری لاگت',          en: 'Total Purchase Cost' },
   meatSold:        { ur: 'فروخت گوشت (kg)',          en: 'Meat Sold (kg)' },
   cashCollected:   { ur: 'نقد وصولی (Rs)',           en: 'Cash Collected (Rs)' },
   saved:           { ur: '✓ محفوظ ہو گیا',           en: '✓ Saved' },

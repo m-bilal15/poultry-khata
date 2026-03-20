@@ -18,11 +18,17 @@ export function DailyEntryForm({ date = getToday() }: Props) {
 
   const existing = dailyEntries.find((e) => e.shop_id === selectedShop?.id && e.date === date);
 
+  // Reverse-calculate rate from stored total cost ÷ weight (for loading existing entries)
+  const existingRate =
+    existing && existing.live_weight_kg > 0
+      ? Math.round(existing.purchase_cost / existing.live_weight_kg)
+      : 0;
+
   const [form, setForm] = useState({
-    live_weight_kg: existing?.live_weight_kg?.toString() || '',
-    purchase_cost: existing?.purchase_cost?.toString() || '',
-    meat_sold_kg: existing?.meat_sold_kg?.toString() || '',
-    cash_collected: existing?.cash_collected?.toString() || '',
+    live_weight_kg:   existing?.live_weight_kg?.toString() || '',
+    purchase_rate:    existingRate > 0 ? existingRate.toString() : '',
+    meat_sold_kg:     existing?.meat_sold_kg?.toString()  || '',
+    cash_collected:   existing?.cash_collected?.toString() || '',
   });
 
   const [expForm, setExpForm] = useState({ category: 'misc' as Expense['category'], amount: '', note: '' });
@@ -32,24 +38,33 @@ export function DailyEntryForm({ date = getToday() }: Props) {
 
   useEffect(() => {
     if (existing) {
+      const rate =
+        existing.live_weight_kg > 0
+          ? Math.round(existing.purchase_cost / existing.live_weight_kg)
+          : 0;
       setForm({
         live_weight_kg: existing.live_weight_kg.toString(),
-        purchase_cost: existing.purchase_cost.toString(),
-        meat_sold_kg: existing.meat_sold_kg.toString(),
+        purchase_rate:  rate > 0 ? rate.toString() : '',
+        meat_sold_kg:   existing.meat_sold_kg.toString(),
         cash_collected: existing.cash_collected.toString(),
       });
     }
   }, [existing]);
 
+  // Auto-computed total purchase cost from rate × weight
+  const liveKg   = parseFloat(form.live_weight_kg) || 0;
+  const rate      = parseFloat(form.purchase_rate) || 0;
+  const totalCost = liveKg * rate;
+
   const handleSave = async () => {
     if (!selectedShop) return;
     const entry: DailyEntryType = {
-      id: existing?.id || crypto.randomUUID(),
-      shop_id: selectedShop.id,
+      id:             existing?.id || crypto.randomUUID(),
+      shop_id:        selectedShop.id,
       date,
-      live_weight_kg: parseFloat(form.live_weight_kg) || 0,
-      purchase_cost: parseFloat(form.purchase_cost) || 0,
-      meat_sold_kg: parseFloat(form.meat_sold_kg) || 0,
+      live_weight_kg: liveKg,
+      purchase_cost:  totalCost,           // stored as total Rs
+      meat_sold_kg:   parseFloat(form.meat_sold_kg)   || 0,
       cash_collected: parseFloat(form.cash_collected) || 0,
     };
     upsertDailyEntry(entry);
@@ -65,12 +80,12 @@ export function DailyEntryForm({ date = getToday() }: Props) {
   const handleAddExpense = async () => {
     if (!selectedShop || !expForm.amount) return;
     const expense: Expense = {
-      id: crypto.randomUUID(),
-      shop_id: selectedShop.id,
+      id:       crypto.randomUUID(),
+      shop_id:  selectedShop.id,
       date,
       category: expForm.category,
-      amount: parseFloat(expForm.amount) || 0,
-      note: expForm.note,
+      amount:   parseFloat(expForm.amount) || 0,
+      note:     expForm.note,
     };
     addExpense(expense);
     if (isOnline) {
@@ -100,20 +115,13 @@ export function DailyEntryForm({ date = getToday() }: Props) {
 
   const previewEntry: DailyEntryType = {
     id: '', shop_id: selectedShop.id, date,
-    live_weight_kg: parseFloat(form.live_weight_kg) || 0,
-    purchase_cost: parseFloat(form.purchase_cost) || 0,
-    meat_sold_kg: parseFloat(form.meat_sold_kg) || 0,
+    live_weight_kg: liveKg,
+    purchase_cost:  totalCost,
+    meat_sold_kg:   parseFloat(form.meat_sold_kg)   || 0,
     cash_collected: parseFloat(form.cash_collected) || 0,
   };
 
   const summary = buildDailySummary(previewEntry, todayExpenses);
-
-  const fields = [
-    { key: 'live_weight_kg', label: t('liveWeight'), mode: 'decimal' as const, icon: '⚖️' },
-    { key: 'purchase_cost', label: t('purchaseCost'), mode: 'numeric' as const, icon: '🛒' },
-    { key: 'meat_sold_kg', label: t('meatSold'), mode: 'decimal' as const, icon: '🍗' },
-    { key: 'cash_collected', label: t('cashCollected'), mode: 'numeric' as const, icon: '💰' },
-  ] as const;
 
   const categoryLabels: Record<Expense['category'], string> = {
     rent: t('rent'), generator: t('generator'), labor: t('labor'), misc: t('misc'),
@@ -124,23 +132,75 @@ export function DailyEntryForm({ date = getToday() }: Props) {
       {/* Entry form */}
       <div className="bg-white rounded-3xl p-5" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
         <p className="font-bold text-gray-700 mb-4 text-lg">{t('dailyEntry')} — {selectedShop.name}</p>
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {fields.map(({ key, label, mode, icon }) => (
-            <div key={key} className="bg-gray-50 rounded-2xl p-3">
-              <label className="flex items-center gap-1 text-xs text-gray-500 mb-2 font-medium justify-end">
-                {label} <span>{icon}</span>
-              </label>
-              <input
-                type="number"
-                inputMode={mode}
-                value={form[key]}
-                onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-xl font-bold text-gray-800"
-                placeholder="0"
-              />
-            </div>
-          ))}
+
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          {/* Live Weight */}
+          <div className="bg-gray-50 rounded-2xl p-3">
+            <label className="flex items-center gap-1 text-xs text-gray-500 mb-2 font-medium justify-end">
+              {t('liveWeight')} <span>⚖️</span>
+            </label>
+            <input
+              type="number" inputMode="decimal"
+              value={form.live_weight_kg}
+              onChange={(e) => setForm((f) => ({ ...f, live_weight_kg: e.target.value }))}
+              className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-xl font-bold text-gray-800"
+              placeholder="0"
+            />
+          </div>
+
+          {/* Purchase Rate (Rs/kg) — auto-calculates total */}
+          <div className="bg-gray-50 rounded-2xl p-3">
+            <label className="flex items-center gap-1 text-xs text-gray-500 mb-2 font-medium justify-end">
+              {t('purchaseRate')} <span>🛒</span>
+            </label>
+            <input
+              type="number" inputMode="numeric"
+              value={form.purchase_rate}
+              onChange={(e) => setForm((f) => ({ ...f, purchase_rate: e.target.value }))}
+              className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-xl font-bold text-gray-800"
+              placeholder="0"
+            />
+          </div>
+
+          {/* Meat Sold */}
+          <div className="bg-gray-50 rounded-2xl p-3">
+            <label className="flex items-center gap-1 text-xs text-gray-500 mb-2 font-medium justify-end">
+              {t('meatSold')} <span>🍗</span>
+            </label>
+            <input
+              type="number" inputMode="decimal"
+              value={form.meat_sold_kg}
+              onChange={(e) => setForm((f) => ({ ...f, meat_sold_kg: e.target.value }))}
+              className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-xl font-bold text-gray-800"
+              placeholder="0"
+            />
+          </div>
+
+          {/* Cash Collected */}
+          <div className="bg-gray-50 rounded-2xl p-3">
+            <label className="flex items-center gap-1 text-xs text-gray-500 mb-2 font-medium justify-end">
+              {t('cashCollected')} <span>💰</span>
+            </label>
+            <input
+              type="number" inputMode="numeric"
+              value={form.cash_collected}
+              onChange={(e) => setForm((f) => ({ ...f, cash_collected: e.target.value }))}
+              className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-xl font-bold text-gray-800"
+              placeholder="0"
+            />
+          </div>
         </div>
+
+        {/* Auto-calculated total cost preview */}
+        {liveKg > 0 && rate > 0 && (
+          <div className="flex items-center justify-between bg-blue-50 rounded-2xl px-4 py-2.5 mb-3 border border-blue-100">
+            <span className="font-bold text-blue-700">{formatCurrency(totalCost)}</span>
+            <span className="text-xs text-blue-500">
+              {liveKg} kg × Rs {rate} = {t('totalCostCalc')}
+            </span>
+          </div>
+        )}
+
         <button
           onClick={handleSave}
           className="w-full py-4 rounded-2xl font-bold text-lg text-white"
