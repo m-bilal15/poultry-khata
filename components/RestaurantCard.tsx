@@ -73,7 +73,7 @@ export function RestaurantCard({ restaurant, dailyEntries, payments, defaultRate
               <p className={`font-bold text-xl leading-tight ${isOwed ? 'text-orange-600' : 'text-green-600'}`}>
                 {formatCurrency(Math.abs(balance))}
               </p>
-              <p className="text-xs text-gray-400 text-right">{isOwed ? 'بقایا' : 'صاف ✓'}</p>
+              <p className="text-xs text-gray-400 text-right">{isOwed ? t('due') : t('clear')}</p>
             </div>
             <svg className={`w-4 h-4 text-gray-300 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -135,11 +135,11 @@ export function RestaurantCard({ restaurant, dailyEntries, payments, defaultRate
               <input type="number" inputMode="numeric" value={payForm.amount}
                 onChange={(e) => setPayForm((f) => ({ ...f, amount: e.target.value }))}
                 className="border border-green-100 rounded-xl px-3 py-2 text-sm bg-white flex-1 font-bold"
-                placeholder="رقم" />
+                placeholder={t('amount')} />
               <input value={payForm.note}
                 onChange={(e) => setPayForm((f) => ({ ...f, note: e.target.value }))}
                 className="border border-green-100 rounded-xl px-3 py-2 text-sm bg-white flex-1 text-right"
-                placeholder="نوٹ" />
+                placeholder={t('noteShort')} />
             </div>
             <button
               onClick={() => { if (payForm.amount) { onAddPayment(restaurant.id, parseFloat(payForm.amount), payForm.note); setPayForm({ amount: '', note: '' }); } }}

@@ -1,23 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-:root {
-  --bg: #F0F4F0;
-  --card: #ffffff;
-  --green: #16a34a;
-  --green-dark: #15803d;
-  --green-light: #dcfce7;
-  --red: #dc2626;
-  --red-light: #fef2f2;
-  --orange: #ea580c;
-  --orange-light: #fff7ed;
-  --text: #111827;
-  --text-muted: #6b7280;
-  --border: #e5e7eb;
-  --shadow: 0 2px 12px rgba(0,0,0,0.08);
-  --shadow-lg: 0 4px 24px rgba(0,0,0,0.12);
-}
-
 * {
   -webkit-tap-highlight-color: transparent;
   box-sizing: border-box;
@@ -27,15 +10,26 @@ html, body {
   height: 100%;
 }
 
+/* Urdu mode: Nastaliq font */
 body {
-  background: var(--bg);
-  color: var(--text);
+  background: #f0f4f0;
+  color: #111827;
   font-family: 'Noto Nastaliq Urdu', system-ui, sans-serif;
-  padding-bottom: 88px;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Better input styling */
+/* English mode: clean system font */
+:lang(en) body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', system-ui, sans-serif;
+}
+
+:lang(en) input,
+:lang(en) select,
+:lang(en) textarea,
+:lang(en) button {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', system-ui, sans-serif;
+}
+
 input, select, textarea {
   font-family: 'Noto Nastaliq Urdu', system-ui, sans-serif;
   outline: none;
@@ -47,19 +41,19 @@ input:focus, select:focus {
   box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
 }
 
+/* Numbers and dates always use system font */
 input[type="number"] {
   direction: ltr;
   text-align: left;
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-weight: 600;
 }
 
 input[type="date"] {
   direction: ltr;
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* Smooth active states */
 button:active {
   transform: scale(0.97);
 }

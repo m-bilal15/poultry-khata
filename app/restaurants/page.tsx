@@ -96,7 +96,8 @@ export default function RestaurantsPage() {
   const sorted = [...restaurants].sort((a, b) => getRestaurantBalance(b.id) - getRestaurantBalance(a.id));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <button onClick={() => setShowAdd(true)}
           className="flex items-center gap-1.5 bg-orange-500 text-white px-4 py-2.5 rounded-2xl font-bold text-sm"
@@ -109,12 +110,14 @@ export default function RestaurantsPage() {
 
       <ShopSelector />
 
+      {/* Total due */}
       <div className="rounded-3xl p-5 text-right" style={{ background: 'linear-gradient(135deg, #fff7ed, #ffedd5)', border: '1px solid #fed7aa' }}>
         <p className="text-orange-400 text-sm font-medium">{t('totalAmountDue')}</p>
         <p className="text-4xl font-bold text-orange-600 mt-1">{formatCurrency(totalDue)}</p>
         <p className="text-orange-400 text-xs mt-1">{restaurants.length} {t('restaurantPage')}</p>
       </div>
 
+      {/* Add restaurant form */}
       {showAdd && (
         <div className="bg-white rounded-3xl p-5" style={{ boxShadow: '0 4px 24px rgba(234,88,12,0.15)', border: '1px solid #fed7aa' }}>
           <p className="font-bold text-gray-700 mb-4 text-right text-lg">{t('newRestaurant')}</p>
@@ -137,6 +140,7 @@ export default function RestaurantsPage() {
         </div>
       )}
 
+      {/* Restaurant cards — 2-col grid on desktop */}
       {sorted.length === 0 ? (
         <div className="bg-white rounded-3xl p-12 text-center" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -146,12 +150,16 @@ export default function RestaurantsPage() {
           <p className="text-gray-400 text-sm mt-1">{t('addRestHint')}</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid md:grid-cols-2 gap-3">
           {sorted.map((restaurant) => (
-            <RestaurantCard key={restaurant.id} restaurant={restaurant}
+            <RestaurantCard
+              key={restaurant.id}
+              restaurant={restaurant}
               dailyEntries={restaurantDaily.filter((e) => e.customer_id === restaurant.id)}
               payments={payments.filter((p) => p.customer_id === restaurant.id)}
-              onAddDaily={handleAddDaily} onAddPayment={handleAddPayment} />
+              onAddDaily={handleAddDaily}
+              onAddPayment={handleAddPayment}
+            />
           ))}
         </div>
       )}

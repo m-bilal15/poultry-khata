@@ -35,7 +35,6 @@ export default function UdhaarPage() {
     return udhaarEntries.filter((e) => e.customer_id === customerId);
   };
 
-  // Sort by balance descending
   const sorted = [...individualCustomers]
     .filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search))
     .sort((a, b) => getCustomerBalance(b.id) - getCustomerBalance(a.id));
@@ -105,7 +104,8 @@ export default function UdhaarPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <button
           onClick={() => setShowAddCustomer(true)}
@@ -127,14 +127,12 @@ export default function UdhaarPage() {
 
       {/* Search */}
       {individualCustomers.length > 3 && (
-        <div className="relative">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-right"
-            placeholder={t('searchPlaceholder')}
-          />
-        </div>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-right"
+          placeholder={t('searchPlaceholder')}
+        />
       )}
 
       {/* Add customer form */}
@@ -170,7 +168,7 @@ export default function UdhaarPage() {
         </div>
       )}
 
-      {/* Customer list */}
+      {/* Customer list — 2-col grid on desktop */}
       {sorted.length === 0 ? (
         <div className="bg-white rounded-3xl p-12 text-center" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -180,7 +178,7 @@ export default function UdhaarPage() {
           <p className="text-gray-400 text-sm mt-1">{t('addCustomerHint')}</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid md:grid-cols-2 gap-3">
           {sorted.map((customer) => (
             <UdhaarCard
               key={customer.id}
