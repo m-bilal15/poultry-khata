@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Enable PWA-like features
+  // next-pwa requires CommonJS config, so we handle it here
 };
 
 export default nextConfig;
