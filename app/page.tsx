@@ -2,13 +2,14 @@
 
 import { useStore } from '@/store/useStore';
 import { useShop } from '@/hooks/useShop';
+import { useT } from '@/hooks/useT';
 import { ShopSelector } from '@/components/ShopSelector';
 import { formatCurrency, getToday, buildDailySummary } from '@/lib/calculations';
 import Link from 'next/link';
 
 export default function Dashboard() {
   const { shops, dailyEntries, expenses, udhaarEntries, customers, restaurantDaily, payments } = useStore();
-  const { selectedShop } = useShop();
+  const { t } = useT();
   const today = getToday();
 
   const todayNetProfit = shops.reduce((total, shop) => {
@@ -43,34 +44,28 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-5 pb-2">
-      {/* Header */}
+      {/* Hero card */}
       <div className="rounded-3xl p-5 text-white relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 50%, #14532d 100%)', boxShadow: '0 8px 32px rgba(22,163,74,0.35)' }}>
-        {/* Decorative circles */}
         <div className="absolute top-0 left-0 w-40 h-40 rounded-full opacity-10" style={{ background: 'white', transform: 'translate(-30%, -30%)' }} />
         <div className="absolute bottom-0 right-0 w-32 h-32 rounded-full opacity-10" style={{ background: 'white', transform: 'translate(30%, 30%)' }} />
-
         <div className="relative">
           <div className="flex items-start justify-between mb-4">
             <div className="bg-white/20 rounded-2xl px-3 py-1.5">
               <p className="text-green-100 text-xs font-medium">{todayDateStr}</p>
             </div>
             <div className="text-right">
-              <h1 className="text-2xl font-bold leading-tight">صفدر اینڈ سنز</h1>
-              <p className="text-green-200 text-xs">Poultry Traders — Lahore</p>
+              <h1 className="text-2xl font-bold leading-tight">{t('brandName')}</h1>
+              <p className="text-green-200 text-xs">{t('brandSub')}</p>
             </div>
           </div>
-
-          <div>
-            <p className="text-green-200 text-sm mb-1">آج کا خالص منافع</p>
-            <p className={`text-5xl font-bold tracking-tight ${todayNetProfit < 0 ? 'text-red-300' : 'text-white'}`}>
-              {formatCurrency(todayNetProfit)}
-            </p>
-            <p className="text-green-300 text-xs mt-1">تمام دکانوں کا مجموعہ</p>
-          </div>
+          <p className="text-green-200 text-sm mb-1">{t('todayProfit')}</p>
+          <p className={`text-5xl font-bold tracking-tight ${todayNetProfit < 0 ? 'text-red-300' : 'text-white'}`}>
+            {formatCurrency(todayNetProfit)}
+          </p>
+          <p className="text-green-300 text-xs mt-1">{t('allShopsCombined')}</p>
         </div>
       </div>
 
-      {/* Shop selector */}
       <ShopSelector />
 
       {/* Balance cards */}
@@ -82,9 +77,9 @@ export default function Dashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <p className="text-gray-500 text-xs mb-1">کل ادھار بقایا</p>
+            <p className="text-gray-500 text-xs mb-1">{t('totalUdhaarDue')}</p>
             <p className="text-2xl font-bold text-red-600 leading-tight">{formatCurrency(totalUdhaar)}</p>
-            <p className="text-gray-400 text-xs mt-1.5">{udhaarCount} گاہک</p>
+            <p className="text-gray-400 text-xs mt-1.5">{udhaarCount} {t('customers')}</p>
           </div>
         </Link>
 
@@ -95,24 +90,24 @@ export default function Dashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
-            <p className="text-gray-500 text-xs mb-1">ریسٹورنٹ بقایا</p>
+            <p className="text-gray-500 text-xs mb-1">{t('restaurantDue')}</p>
             <p className="text-2xl font-bold text-orange-600 leading-tight">{formatCurrency(totalRestaurantDue)}</p>
-            <p className="text-gray-400 text-xs mt-1.5">{restCount} ریسٹورنٹ</p>
+            <p className="text-gray-400 text-xs mt-1.5">{restCount} {t('restaurants')}</p>
           </div>
         </Link>
       </div>
 
       {/* Quick actions */}
       <div>
-        <p className="text-gray-500 text-sm font-semibold mb-2 text-right">فوری اندراج</p>
+        <p className="text-gray-500 text-sm font-semibold mb-2 text-right">{t('quickEntry')}</p>
         <div className="grid grid-cols-3 gap-2.5">
-          <QuickAction href="/khata" label="خاتہ لکھیں" color="green"
+          <QuickAction href="/khata" label={t('writeKhata')} color="green"
             icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>}
           />
-          <QuickAction href="/udhaar" label="ادھار لکھیں" color="red"
+          <QuickAction href="/udhaar" label={t('writeUdhaar')} color="red"
             icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
           />
-          <QuickAction href="/restaurants" label="ریسٹورنٹ" color="orange"
+          <QuickAction href="/restaurants" label={t('restaurants')} color="orange"
             icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
           />
         </div>
@@ -121,7 +116,7 @@ export default function Dashboard() {
       {/* Per-shop summary */}
       {shops.length > 1 && (
         <div className="bg-white rounded-3xl p-5" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
-          <p className="font-bold text-gray-700 mb-4 text-right">آج کی دکانیں</p>
+          <p className="font-bold text-gray-700 mb-4 text-right">{t('todayShops')}</p>
           <div className="space-y-2">
             {shops.map((shop) => {
               const entry = dailyEntries.find((e) => e.shop_id === shop.id && e.date === today);
@@ -130,7 +125,7 @@ export default function Dashboard() {
               return (
                 <div key={shop.id} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
                   <span className={`font-bold text-lg ${profit === null ? 'text-gray-300' : profit >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                    {profit === null ? '—' : formatCurrency(profit)}
+                    {profit === null ? t('noEntry') : formatCurrency(profit)}
                   </span>
                   <span className="font-semibold text-gray-700">{shop.name}</span>
                 </div>
@@ -145,8 +140,8 @@ export default function Dashboard() {
 
 function QuickAction({ href, label, color, icon }: { href: string; label: string; color: 'green' | 'red' | 'orange'; icon: React.ReactNode }) {
   const styles = {
-    green: { bg: '#f0fdf4', iconBg: '#dcfce7', text: '#16a34a', border: '#bbf7d0' },
-    red: { bg: '#fef2f2', iconBg: '#fee2e2', text: '#dc2626', border: '#fecaca' },
+    green:  { bg: '#f0fdf4', iconBg: '#dcfce7', text: '#16a34a', border: '#bbf7d0' },
+    red:    { bg: '#fef2f2', iconBg: '#fee2e2', text: '#dc2626', border: '#fecaca' },
     orange: { bg: '#fff7ed', iconBg: '#ffedd5', text: '#ea580c', border: '#fed7aa' },
   }[color];
 

@@ -5,6 +5,7 @@ import { useStore } from '@/store/useStore';
 import { useShop } from '@/hooks/useShop';
 import { ShopSelector } from '@/components/ShopSelector';
 import { formatCurrency, formatKg, buildDailySummary, getMonthRange, getWeekRange } from '@/lib/calculations';
+import { useT } from '@/hooks/useT';
 
 type Period = 'week' | 'month' | 'all';
 
@@ -12,6 +13,7 @@ export default function ReportsPage() {
   const [period, setPeriod] = useState<Period>('month');
   const { shops, dailyEntries, expenses, customers, udhaarEntries, restaurantDaily, payments } = useStore();
   const { selectedShop } = useShop();
+  const { t } = useT();
 
   const getDateRange = (): { start: string; end: string } => {
     if (period === 'week') return getWeekRange();
@@ -95,70 +97,58 @@ export default function ReportsPage() {
     .sort((a, b) => b.totalKg - a.totalKg)
     .slice(0, 10);
 
+  const periodKeys = { week: 'week', month: 'month', all: 'all' } as const;
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-800">رپورٹس</h1>
-      </div>
+      <h1 className="text-xl font-bold text-gray-800 text-right">{t('reportsPage')}</h1>
 
-      {/* Period selector */}
       <div className="flex gap-2">
-        {(['week', 'month', 'all'] as Period[]).map((p) => {
-          const labels = { week: 'ہفتہ', month: 'مہینہ', all: 'سب' };
-          return (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`flex-1 py-2 rounded-xl font-semibold text-sm transition-all ${
-                period === p ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600'
-              }`}
-            >
-              {labels[p]}
-            </button>
-          );
-        })}
+        {(['week', 'month', 'all'] as Period[]).map((p) => (
+          <button key={p} onClick={() => setPeriod(p)}
+            className={`flex-1 py-2.5 rounded-2xl font-bold text-sm transition-all ${period === p ? 'bg-green-600 text-white' : 'bg-white text-gray-600 border border-gray-200'}`}
+            style={period === p ? { boxShadow: '0 4px 12px rgba(22,163,74,0.25)' } : {}}>
+            {t(periodKeys[p])}
+          </button>
+        ))}
       </div>
 
       <ShopSelector />
 
-      {/* Grand total */}
-      <div className="bg-green-600 text-white rounded-2xl p-5">
-        <p className="text-green-100 text-sm">کل خالص منافع</p>
+      <div className="rounded-3xl p-5 text-white relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #16a34a, #14532d)', boxShadow: '0 8px 24px rgba(22,163,74,0.3)' }}>
+        <p className="text-green-200 text-sm mb-1">{t('totalNetProfit')}</p>
         <p className="text-4xl font-bold">{formatCurrency(grandTotal.netProfit)}</p>
-        <div className="grid grid-cols-3 gap-2 mt-3">
-          <div>
-            <p className="text-green-200 text-xs">آمدنی</p>
-            <p className="font-semibold text-sm">{formatCurrency(grandTotal.cash)}</p>
+        <div className="grid grid-cols-3 gap-2 mt-4">
+          <div className="bg-white/10 rounded-2xl p-2.5">
+            <p className="text-green-200 text-xs">{t('revenue')}</p>
+            <p className="font-bold text-sm mt-0.5">{formatCurrency(grandTotal.cash)}</p>
           </div>
-          <div>
-            <p className="text-green-200 text-xs">خریداری</p>
-            <p className="font-semibold text-sm">{formatCurrency(grandTotal.cost)}</p>
+          <div className="bg-white/10 rounded-2xl p-2.5">
+            <p className="text-green-200 text-xs">{t('purchase')}</p>
+            <p className="font-bold text-sm mt-0.5">{formatCurrency(grandTotal.cost)}</p>
           </div>
-          <div>
-            <p className="text-green-200 text-xs">اخراجات</p>
-            <p className="font-semibold text-sm">{formatCurrency(grandTotal.expenses)}</p>
+          <div className="bg-white/10 rounded-2xl p-2.5">
+            <p className="text-green-200 text-xs">{t('expenses')}</p>
+            <p className="font-bold text-sm mt-0.5">{formatCurrency(grandTotal.expenses)}</p>
           </div>
         </div>
       </div>
 
-      {/* Per-shop breakdown */}
       {shopReports.length > 0 && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <h2 className="font-bold text-gray-700 mb-3 text-right">دکان وار تفصیل</h2>
+        <div className="bg-white rounded-3xl p-5" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+          <p className="font-bold text-gray-700 mb-4 text-right">{t('perShopBreakdown')}</p>
           <div className="space-y-3">
-            {shopReports.map(({ shop, totalNetProfit, totalMeatSold, avgYield, totalLiveWeight, totalCash, totalExpenses, days }) => (
-              <div key={shop.id} className="border rounded-xl p-3">
+            {shopReports.map(({ shop, totalNetProfit, totalMeatSold, avgYield, totalCash, days }) => (
+              <div key={shop.id} className="border border-gray-100 rounded-2xl p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className={`font-bold text-lg ${totalNetProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatCurrency(totalNetProfit)}
-                  </span>
+                  <span className={`font-bold text-lg ${totalNetProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(totalNetProfit)}</span>
                   <span className="font-bold text-gray-700">{shop.name}</span>
                 </div>
                 <div className="grid grid-cols-4 gap-2 text-center">
-                  <MiniStat label="دن" value={days.toString()} />
+                  <MiniStat label={t('days')} value={days.toString()} />
                   <MiniStat label="Yield" value={`${avgYield}%`} />
-                  <MiniStat label="گوشت" value={formatKg(totalMeatSold)} />
-                  <MiniStat label="آمدنی" value={formatCurrency(totalCash)} />
+                  <MiniStat label={t('meat')} value={formatKg(totalMeatSold)} />
+                  <MiniStat label={t('revenue')} value={formatCurrency(totalCash)} />
                 </div>
               </div>
             ))}
@@ -166,19 +156,16 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {/* Top udhaar defaulters */}
       {udhaarDefaulters.length > 0 && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <h2 className="font-bold text-gray-700 mb-3 text-right">سب سے زیادہ ادھار</h2>
+        <div className="bg-white rounded-3xl p-5" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+          <p className="font-bold text-gray-700 mb-4 text-right">{t('highestUdhaar')}</p>
           <div className="space-y-2">
             {udhaarDefaulters.map(({ customer, balance }, i) => (
-              <div key={customer.id} className="flex items-center justify-between py-2 border-b border-gray-50">
+              <div key={customer.id} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
                 <span className="text-red-600 font-bold">{formatCurrency(balance)}</span>
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-gray-700">{customer.name}</span>
-                  <span className="text-xs text-gray-400 bg-gray-100 rounded-full w-6 h-6 flex items-center justify-center">
-                    {i + 1}
-                  </span>
+                  <span className="text-xs font-bold text-gray-400 bg-gray-100 rounded-full w-6 h-6 flex items-center justify-center">{i + 1}</span>
                 </div>
               </div>
             ))}
@@ -186,24 +173,19 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {/* Top restaurant buyers */}
       {topRestaurants.length > 0 && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <h2 className="font-bold text-gray-700 mb-3 text-right">سب سے زیادہ خریدار</h2>
+        <div className="bg-white rounded-3xl p-5" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+          <p className="font-bold text-gray-700 mb-4 text-right">{t('topBuyers')}</p>
           <div className="space-y-2">
-            {topRestaurants.map(({ restaurant, totalKg, totalAmount, balance }, i) => (
-              <div key={restaurant.id} className="flex items-center justify-between py-2 border-b border-gray-50">
-                <div className="text-right">
+            {topRestaurants.map(({ restaurant, totalKg, balance }, i) => (
+              <div key={restaurant.id} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
+                <div>
                   <p className="text-orange-600 font-bold text-sm">{formatKg(totalKg)}</p>
-                  {balance > 0 && (
-                    <p className="text-red-500 text-xs">بقایا: {formatCurrency(balance)}</p>
-                  )}
+                  {balance > 0 && <p className="text-red-500 text-xs">{t('balance')}: {formatCurrency(balance)}</p>}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-gray-700">{restaurant.name}</span>
-                  <span className="text-xs text-gray-400 bg-gray-100 rounded-full w-6 h-6 flex items-center justify-center">
-                    {i + 1}
-                  </span>
+                  <span className="text-xs font-bold text-gray-400 bg-gray-100 rounded-full w-6 h-6 flex items-center justify-center">{i + 1}</span>
                 </div>
               </div>
             ))}
@@ -212,10 +194,12 @@ export default function ReportsPage() {
       )}
 
       {shopReports.every((r) => r.days === 0) && (
-        <div className="text-center py-12 text-gray-400">
-          <p className="text-5xl mb-3">📈</p>
-          <p>اس مدت میں کوئی ڈیٹا نہیں</p>
-          <p className="text-sm">خاتہ میں داخلے لکھیں</p>
+        <div className="bg-white rounded-3xl p-12 text-center" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+          </div>
+          <p className="text-gray-500 font-semibold">{t('noDataPeriod')}</p>
+          <p className="text-gray-400 text-sm mt-1">{t('writeKhataHint')}</p>
         </div>
       )}
     </div>

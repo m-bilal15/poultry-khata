@@ -6,6 +6,7 @@ import { WhatsAppButton } from './WhatsAppButton';
 import { restaurantDailyMessage, restaurantMonthlyMessage } from '@/lib/whatsapp';
 import { formatCurrency, getToday } from '@/lib/calculations';
 import { useShop } from '@/hooks/useShop';
+import { useT } from '@/hooks/useT';
 
 interface Props {
   restaurant: Customer;
@@ -18,6 +19,7 @@ interface Props {
 
 export function RestaurantCard({ restaurant, dailyEntries, payments, defaultRate = 0, onAddDaily, onAddPayment }: Props) {
   const { selectedShop } = useShop();
+  const { t } = useT();
   const [expanded, setExpanded] = useState(false);
   const [dailyForm, setDailyForm] = useState({ kg: '', rate: defaultRate.toString(), date: getToday() });
   const [payForm, setPayForm] = useState({ amount: '', note: '' });
@@ -85,22 +87,22 @@ export function RestaurantCard({ restaurant, dailyEntries, payments, defaultRate
           {/* Balance summary */}
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-2xl p-3 text-center" style={{ background: '#fff7ed' }}>
-              <p className="text-xs text-gray-400">کل رقم</p>
+              <p className="text-xs text-gray-400">{t('totalCharged')}</p>
               <p className="font-bold text-orange-600 text-sm mt-0.5">{formatCurrency(totalCharged)}</p>
             </div>
             <div className="rounded-2xl p-3 text-center" style={{ background: '#f0fdf4' }}>
-              <p className="text-xs text-gray-400">ادائیگی</p>
+              <p className="text-xs text-gray-400">{t('paid')}</p>
               <p className="font-bold text-green-600 text-sm mt-0.5">{formatCurrency(totalPaid)}</p>
             </div>
             <div className={`rounded-2xl p-3 text-center`} style={{ background: isOwed ? '#fef2f2' : '#f0fdf4' }}>
-              <p className="text-xs text-gray-400">بقایا</p>
+              <p className="text-xs text-gray-400">{t('balance')}</p>
               <p className={`font-bold text-sm mt-0.5 ${isOwed ? 'text-red-600' : 'text-green-600'}`}>{formatCurrency(Math.abs(balance))}</p>
             </div>
           </div>
 
           {/* Add daily */}
           <div className="rounded-2xl p-3 space-y-2" style={{ background: '#fff7ed' }}>
-            <p className="text-xs font-bold text-orange-700 text-right">آج کی خریداری</p>
+            <p className="text-xs font-bold text-orange-700 text-right">{t('todayPurchase')}</p>
             <div className="flex gap-2 flex-wrap">
               <input type="date" value={dailyForm.date}
                 onChange={(e) => setDailyForm((f) => ({ ...f, date: e.target.value }))}
@@ -122,13 +124,13 @@ export function RestaurantCard({ restaurant, dailyEntries, payments, defaultRate
             <button onClick={handleAddDaily}
               className="w-full bg-orange-500 text-white py-2.5 rounded-xl font-bold text-sm"
               style={{ boxShadow: '0 2px 8px rgba(234,88,12,0.2)' }}>
-              + خریداری شامل کریں
+              {t('addPurchase')}
             </button>
           </div>
 
           {/* Add payment */}
           <div className="rounded-2xl p-3 space-y-2" style={{ background: '#f0fdf4' }}>
-            <p className="text-xs font-bold text-green-700 text-right">ادائیگی وصول ہوئی</p>
+            <p className="text-xs font-bold text-green-700 text-right">{t('paymentRecvd')}</p>
             <div className="flex gap-2">
               <input type="number" inputMode="numeric" value={payForm.amount}
                 onChange={(e) => setPayForm((f) => ({ ...f, amount: e.target.value }))}
@@ -143,22 +145,22 @@ export function RestaurantCard({ restaurant, dailyEntries, payments, defaultRate
               onClick={() => { if (payForm.amount) { onAddPayment(restaurant.id, parseFloat(payForm.amount), payForm.note); setPayForm({ amount: '', note: '' }); } }}
               className="w-full bg-green-600 text-white py-2.5 rounded-xl font-bold text-sm"
               style={{ boxShadow: '0 2px 8px rgba(22,163,74,0.2)' }}>
-              + ادائیگی شامل کریں
+              {t('addPaymentBtn')}
             </button>
           </div>
 
           {/* WhatsApp */}
           {restaurant.phone && (
             <div className="flex gap-2 flex-wrap">
-              {lastEntry && <WhatsAppButton phone={restaurant.phone} message={dailyWaMsg} label="آج کا حساب" size="sm" />}
-              <WhatsAppButton phone={restaurant.phone} message={monthlyWaMsg} label="ماہانہ حساب" size="sm" />
+              {lastEntry && <WhatsAppButton phone={restaurant.phone} message={dailyWaMsg} label={t('todayBill')} size="sm" />}
+              <WhatsAppButton phone={restaurant.phone} message={monthlyWaMsg} label={t('monthlyStmt')} size="sm" />
             </div>
           )}
 
           {/* Recent entries */}
           {dailyEntries.length > 0 && (
             <div>
-              <p className="text-xs font-bold text-gray-400 text-right mb-2">حالیہ داخلے</p>
+              <p className="text-xs font-bold text-gray-400 text-right mb-2">{t('recentEntries')}</p>
               <div className="space-y-1.5 max-h-44 overflow-y-auto">
                 {[...dailyEntries].reverse().slice(0, 10).map((entry) => (
                   <div key={entry.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2">

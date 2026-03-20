@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { queueOperation } from '@/lib/offline';
 import { Customer, UdhaarEntry } from '@/types';
 import { formatCurrency, getToday } from '@/lib/calculations';
+import { useT } from '@/hooks/useT';
 
 export default function UdhaarPage() {
   const {
@@ -17,6 +18,7 @@ export default function UdhaarPage() {
     isOnline,
   } = useStore();
 
+  const { t } = useT();
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '' });
   const [search, setSearch] = useState('');
@@ -111,16 +113,16 @@ export default function UdhaarPage() {
           style={{ boxShadow: '0 4px 12px rgba(22,163,74,0.3)' }}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-          گاہک
+          {t('customer')}
         </button>
-        <h1 className="text-xl font-bold text-gray-800">ادھار کھاتہ</h1>
+        <h1 className="text-xl font-bold text-gray-800">{t('udhaarLedger')}</h1>
       </div>
 
       {/* Total outstanding */}
       <div className="rounded-3xl p-5 text-right" style={{ background: 'linear-gradient(135deg, #fef2f2, #fee2e2)', border: '1px solid #fecaca' }}>
-        <p className="text-red-400 text-sm font-medium">کل بقایا ادھار</p>
+        <p className="text-red-400 text-sm font-medium">{t('totalUdhaar')}</p>
         <p className="text-4xl font-bold text-red-600 mt-1">{formatCurrency(totalOutstanding)}</p>
-        <p className="text-red-400 text-xs mt-1">{sorted.filter((c) => getCustomerBalance(c.id) > 0).length} گاہک باقی ہیں</p>
+        <p className="text-red-400 text-xs mt-1">{sorted.filter((c) => getCustomerBalance(c.id) > 0).length} {t('customersRemain')}</p>
       </div>
 
       {/* Search */}
@@ -130,7 +132,7 @@ export default function UdhaarPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-right"
-            placeholder="نام یا نمبر سے تلاش کریں..."
+            placeholder={t('searchPlaceholder')}
           />
         </div>
       )}
@@ -138,19 +140,19 @@ export default function UdhaarPage() {
       {/* Add customer form */}
       {showAddCustomer && (
         <div className="bg-white rounded-3xl p-5" style={{ boxShadow: '0 4px 24px rgba(22,163,74,0.15)', border: '1px solid #bbf7d0' }}>
-          <p className="font-bold text-gray-700 mb-4 text-right text-lg">نیا گاہک شامل کریں</p>
+          <p className="font-bold text-gray-700 mb-4 text-right text-lg">{t('addNewCustomer')}</p>
           <input
             value={newCustomer.name}
             onChange={(e) => setNewCustomer((f) => ({ ...f, name: e.target.value }))}
             className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 mb-3 text-right text-base"
-            placeholder="نام *"
+            placeholder={t('nameReq')}
             autoFocus
           />
           <input
             value={newCustomer.phone}
             onChange={(e) => setNewCustomer((f) => ({ ...f, phone: e.target.value }))}
             className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 mb-4 text-base"
-            placeholder="WhatsApp نمبر (اختیاری)"
+            placeholder={t('whatsappNum')}
             type="tel"
             dir="ltr"
           />
@@ -158,12 +160,12 @@ export default function UdhaarPage() {
             <button
               onClick={() => { setShowAddCustomer(false); setNewCustomer({ name: '', phone: '' }); }}
               className="flex-1 bg-gray-100 text-gray-600 py-3.5 rounded-2xl font-bold"
-            >منسوخ</button>
+            >{t('cancel')}</button>
             <button
               onClick={handleAddCustomer}
               className="flex-1 bg-green-600 text-white py-3.5 rounded-2xl font-bold"
               style={{ boxShadow: '0 4px 12px rgba(22,163,74,0.3)' }}
-            >محفوظ کریں</button>
+            >{t('save')}</button>
           </div>
         </div>
       )}
@@ -174,8 +176,8 @@ export default function UdhaarPage() {
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
             <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
           </div>
-          <p className="text-gray-500 font-semibold">کوئی گاہک نہیں</p>
-          <p className="text-gray-400 text-sm mt-1">اوپر + گاہک بٹن سے شامل کریں</p>
+          <p className="text-gray-500 font-semibold">{t('noCustomers')}</p>
+          <p className="text-gray-400 text-sm mt-1">{t('addCustomerHint')}</p>
         </div>
       ) : (
         <div className="space-y-3">

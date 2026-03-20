@@ -3,8 +3,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Shop, DailyEntry, Customer, UdhaarEntry, RestaurantDaily, Expense, Payment } from '@/types';
+import { Lang } from '@/lib/i18n';
 
 interface AppState {
+  // Language
+  lang: Lang;
+  setLang: (lang: Lang) => void;
+
   // Selected shop
   selectedShopId: string | null;
   setSelectedShop: (id: string | null) => void;
@@ -56,6 +61,9 @@ interface AppState {
 export const useStore = create<AppState>()(
   persist(
     (set) => ({
+      lang: 'ur' as Lang,
+      setLang: (lang) => set({ lang }),
+
       selectedShopId: null,
       setSelectedShop: (id) => set({ selectedShopId: id }),
 
@@ -115,6 +123,7 @@ export const useStore = create<AppState>()(
     {
       name: 'poultry-khata-store',
       partialize: (state) => ({
+        lang: state.lang,
         selectedShopId: state.selectedShopId,
         shops: state.shops,
         dailyEntries: state.dailyEntries,

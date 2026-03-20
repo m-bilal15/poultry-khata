@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 import { useShop } from '@/hooks/useShop';
+import { useT } from '@/hooks/useT';
 import { supabase } from '@/lib/supabase';
 import { queueOperation } from '@/lib/offline';
 import { buildDailySummary, formatCurrency, getToday } from '@/lib/calculations';
@@ -12,6 +13,7 @@ interface Props { date?: string; }
 
 export function DailyEntryForm({ date = getToday() }: Props) {
   const { selectedShop } = useShop();
+  const { t } = useT();
   const { dailyEntries, upsertDailyEntry, expenses, addExpense, removeExpense, isOnline } = useStore();
 
   const existing = dailyEntries.find((e) => e.shop_id === selectedShop?.id && e.date === date);
@@ -24,7 +26,7 @@ export function DailyEntryForm({ date = getToday() }: Props) {
   });
 
   const [expForm, setExpForm] = useState({ category: 'misc' as Expense['category'], amount: '', note: '' });
-  const [saved, setSaved] = useState(false);
+  const [savedState, setSavedState] = useState(false);
 
   const todayExpenses = expenses.filter((e) => e.shop_id === selectedShop?.id && e.date === date);
 
@@ -56,8 +58,8 @@ export function DailyEntryForm({ date = getToday() }: Props) {
     } else {
       await queueOperation({ table: 'daily_entries', operation: existing ? 'update' : 'insert', data: entry });
     }
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSavedState(true);
+    setTimeout(() => setSavedState(false), 2000);
   };
 
   const handleAddExpense = async () => {
@@ -91,15 +93,13 @@ export function DailyEntryForm({ date = getToday() }: Props) {
   if (!selectedShop) {
     return (
       <div className="bg-white rounded-3xl p-8 text-center" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
-        <p className="text-gray-400 text-lg">پہلے ایک دکان منتخب کریں</p>
+        <p className="text-gray-400 text-lg">{t('selectShop')}</p>
       </div>
     );
   }
 
   const previewEntry: DailyEntryType = {
-    id: '',
-    shop_id: selectedShop.id,
-    date,
+    id: '', shop_id: selectedShop.id, date,
     live_weight_kg: parseFloat(form.live_weight_kg) || 0,
     purchase_cost: parseFloat(form.purchase_cost) || 0,
     meat_sold_kg: parseFloat(form.meat_sold_kg) || 0,
@@ -109,25 +109,25 @@ export function DailyEntryForm({ date = getToday() }: Props) {
   const summary = buildDailySummary(previewEntry, todayExpenses);
 
   const fields = [
-    { key: 'live_weight_kg', label: 'زندہ وزن (kg)', mode: 'decimal' as const, icon: '⚖️' },
-    { key: 'purchase_cost', label: 'خریداری قیمت (Rs)', mode: 'numeric' as const, icon: '🛒' },
-    { key: 'meat_sold_kg', label: 'فروخت گوشت (kg)', mode: 'decimal' as const, icon: '🍗' },
-    { key: 'cash_collected', label: 'نقد وصولی (Rs)', mode: 'numeric' as const, icon: '💰' },
+    { key: 'live_weight_kg', label: t('liveWeight'), mode: 'decimal' as const, icon: '⚖️' },
+    { key: 'purchase_cost', label: t('purchaseCost'), mode: 'numeric' as const, icon: '🛒' },
+    { key: 'meat_sold_kg', label: t('meatSold'), mode: 'decimal' as const, icon: '🍗' },
+    { key: 'cash_collected', label: t('cashCollected'), mode: 'numeric' as const, icon: '💰' },
   ] as const;
 
   const categoryLabels: Record<Expense['category'], string> = {
-    rent: 'کرایہ', generator: 'جنریٹر', labor: 'مزدوری', misc: 'دیگر',
+    rent: t('rent'), generator: t('generator'), labor: t('labor'), misc: t('misc'),
   };
 
   return (
     <div className="space-y-4">
       {/* Entry form */}
       <div className="bg-white rounded-3xl p-5" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
-        <p className="font-bold text-gray-700 text-right mb-4 text-lg">روزانہ داخلہ — {selectedShop.name}</p>
+        <p className="font-bold text-gray-700 mb-4 text-lg">{t('dailyEntry')} — {selectedShop.name}</p>
         <div className="grid grid-cols-2 gap-3 mb-4">
           {fields.map(({ key, label, mode, icon }) => (
             <div key={key} className="bg-gray-50 rounded-2xl p-3">
-              <label className="flex items-center justify-end gap-1 text-xs text-gray-500 mb-2 font-medium">
+              <label className="flex items-center gap-1 text-xs text-gray-500 mb-2 font-medium justify-end">
                 {label} <span>{icon}</span>
               </label>
               <input
@@ -141,37 +141,32 @@ export function DailyEntryForm({ date = getToday() }: Props) {
             </div>
           ))}
         </div>
-
         <button
           onClick={handleSave}
-          className="w-full py-4 rounded-2xl font-bold text-lg text-white transition-all"
+          className="w-full py-4 rounded-2xl font-bold text-lg text-white"
           style={{
-            background: saved ? '#22c55e' : 'linear-gradient(135deg, #16a34a, #15803d)',
-            boxShadow: saved ? '0 4px 12px rgba(34,197,94,0.3)' : '0 4px 12px rgba(22,163,74,0.3)',
+            background: savedState ? '#22c55e' : 'linear-gradient(135deg, #16a34a, #15803d)',
+            boxShadow: savedState ? '0 4px 12px rgba(34,197,94,0.3)' : '0 4px 12px rgba(22,163,74,0.3)',
           }}
         >
-          {saved ? '✓ محفوظ ہو گیا' : 'محفوظ کریں'}
+          {savedState ? t('saved') : t('save')}
         </button>
       </div>
 
-      {/* Live summary */}
+      {/* Summary */}
       <div className="rounded-3xl p-5" style={{ background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', boxShadow: '0 2px 16px rgba(22,163,74,0.08)' }}>
-        <p className="font-bold text-green-800 mb-4 text-right">آج کا خلاصہ</p>
+        <p className="font-bold text-green-800 mb-4">{t('todaySummary')}</p>
         <div className="grid grid-cols-2 gap-3">
-          <StatCard label="Yield %" value={`${summary.yield_percent}%`}
-            color={summary.yield_percent >= 70 ? '#16a34a' : '#d97706'} />
-          <StatCard label="مجموعی منافع" value={formatCurrency(summary.gross_profit)}
-            color={summary.gross_profit >= 0 ? '#16a34a' : '#dc2626'} />
-          <StatCard label="اخراجات" value={formatCurrency(summary.total_expenses)} color="#6b7280" />
-          <StatCard label="خالص منافع" value={formatCurrency(summary.net_profit)}
-            color={summary.net_profit >= 0 ? '#16a34a' : '#dc2626'} large />
+          <StatCard label={t('yieldPct')} value={`${summary.yield_percent}%`} color={summary.yield_percent >= 70 ? '#16a34a' : '#d97706'} />
+          <StatCard label={t('grossProfit')} value={formatCurrency(summary.gross_profit)} color={summary.gross_profit >= 0 ? '#16a34a' : '#dc2626'} />
+          <StatCard label={t('totalExpenses')} value={formatCurrency(summary.total_expenses)} color="#6b7280" />
+          <StatCard label={t('netProfit')} value={formatCurrency(summary.net_profit)} color={summary.net_profit >= 0 ? '#16a34a' : '#dc2626'} large />
         </div>
       </div>
 
       {/* Expenses */}
       <div className="bg-white rounded-3xl p-5" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
-        <p className="font-bold text-gray-700 text-right mb-4">اخراجات</p>
-
+        <p className="font-bold text-gray-700 mb-4">{t('expenses')}</p>
         {todayExpenses.length > 0 && (
           <div className="space-y-2 mb-4">
             {todayExpenses.map((exp) => (
@@ -191,7 +186,6 @@ export function DailyEntryForm({ date = getToday() }: Props) {
             ))}
           </div>
         )}
-
         <div className="bg-gray-50 rounded-2xl p-3 space-y-2">
           <div className="flex gap-2">
             <select
@@ -199,24 +193,24 @@ export function DailyEntryForm({ date = getToday() }: Props) {
               onChange={(e) => setExpForm((f) => ({ ...f, category: e.target.value as Expense['category'] }))}
               className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white flex-shrink-0"
             >
-              <option value="rent">کرایہ</option>
-              <option value="generator">جنریٹر</option>
-              <option value="labor">مزدوری</option>
-              <option value="misc">دیگر</option>
+              <option value="rent">{t('rent')}</option>
+              <option value="generator">{t('generator')}</option>
+              <option value="labor">{t('labor')}</option>
+              <option value="misc">{t('misc')}</option>
             </select>
             <input type="number" inputMode="numeric" value={expForm.amount}
               onChange={(e) => setExpForm((f) => ({ ...f, amount: e.target.value }))}
               className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white w-28 font-semibold"
-              placeholder="رقم" />
+              placeholder={t('amount')} />
             <input value={expForm.note}
               onChange={(e) => setExpForm((f) => ({ ...f, note: e.target.value }))}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white flex-1 min-w-0 text-right"
-              placeholder="نوٹ (اختیاری)" />
+              className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white flex-1 min-w-0"
+              placeholder={t('note')} />
           </div>
           <button onClick={handleAddExpense}
             className="w-full bg-red-500 text-white py-2.5 rounded-xl font-bold text-sm"
             style={{ boxShadow: '0 2px 8px rgba(220,38,38,0.2)' }}>
-            + خرچہ شامل کریں
+            {t('addExpense')}
           </button>
         </div>
       </div>
