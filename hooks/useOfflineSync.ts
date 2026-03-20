@@ -37,8 +37,10 @@ export function useOfflineSync() {
         supabase.from('shops').select('*').order('created_at'),
         supabase.from('customers').select('*').order('name'),
       ]);
-      if (shopsRes.data) setShops(shopsRes.data);
-      if (customersRes.data) setCustomers(customersRes.data);
+      // Only overwrite local data if Supabase actually has records.
+      // Prevents empty remote from wiping valid local/offline data.
+      if (shopsRes.data && shopsRes.data.length > 0) setShops(shopsRes.data);
+      if (customersRes.data && customersRes.data.length > 0) setCustomers(customersRes.data);
     } catch (err) {
       console.error('Load error:', err);
     }
