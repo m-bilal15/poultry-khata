@@ -69,7 +69,7 @@ export function DailyEntryForm({ date = getToday() }: Props) {
     };
     upsertDailyEntry(entry);
     if (isOnline) {
-      await supabase.from('daily_entries').upsert(entry, { onConflict: 'id' });
+      await supabase.from('daily_entries').upsert(entry, { onConflict: 'shop_id,date' });
     } else {
       await queueOperation({ table: 'daily_entries', operation: existing ? 'update' : 'insert', data: entry });
     }

@@ -6,7 +6,17 @@ import { supabase } from '@/lib/supabase';
 import { getPendingOperations, removePendingOperation } from '@/lib/offline';
 
 export function useOfflineSync() {
-  const { setIsOnline, isOnline, shops, setShops, setCustomers, setUdhaarEntries, setRestaurantDaily, setPayments } = useStore();
+  const {
+    setIsOnline,
+    isOnline,
+    setShops,
+    setCustomers,
+    setDailyEntries,
+    setExpenses,
+    setUdhaarEntries,
+    setRestaurantDaily,
+    setPayments,
+  } = useStore();
 
   const syncPending = useCallback(async () => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -15,7 +25,7 @@ export function useOfflineSync() {
     for (const op of pending) {
       try {
         if (op.operation === 'insert') {
-          await supabase.from(op.table).insert(op.data);
+          await supabase.from(op.table).upsert(op.data, { onConflict: 'id' });
         } else if (op.operation === 'update') {
           const { id, ...rest } = op.data as Record<string, unknown>;
           await supabase.from(op.table).update(rest).eq('id', id);
@@ -33,18 +43,29 @@ export function useOfflineSync() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     if (!url || url.includes('placeholder')) return;
     try {
-      const [shopsRes, customersRes] = await Promise.all([
-        supabase.from('shops').select('*').order('created_at'),
-        supabase.from('customers').select('*').order('name'),
-      ]);
-      // Only overwrite local data if Supabase actually has records.
-      // Prevents empty remote from wiping valid local/offline data.
+      const [shopsRes, customersRes, entriesRes, expensesRes, udhaarRes, restDailyRes, paymentsRes] =
+        await Promise.all([
+          supabase.from('shops').select('*').order('created_at'),
+          supabase.from('customers').select('*').order('name'),
+          supabase.from('daily_entries').select('*').order('date'),
+          supabase.from('expenses').select('*').order('date'),
+          supabase.from('udhaar_entries').select('*').order('date'),
+          supabase.from('restaurant_daily').select('*').order('date'),
+          supabase.from('payments').select('*').order('date'),
+        ]);
+
+      // Only overwrite local data when Supabase has actual records
       if (shopsRes.data && shopsRes.data.length > 0) setShops(shopsRes.data);
       if (customersRes.data && customersRes.data.length > 0) setCustomers(customersRes.data);
+      if (entriesRes.data && entriesRes.data.length > 0) setDailyEntries(entriesRes.data);
+      if (expensesRes.data && expensesRes.data.length > 0) setExpenses(expensesRes.data);
+      if (udhaarRes.data && udhaarRes.data.length > 0) setUdhaarEntries(udhaarRes.data);
+      if (restDailyRes.data && restDailyRes.data.length > 0) setRestaurantDaily(restDailyRes.data);
+      if (paymentsRes.data && paymentsRes.data.length > 0) setPayments(paymentsRes.data);
     } catch (err) {
       console.error('Load error:', err);
     }
-  }, [setShops, setCustomers]);
+  }, [setShops, setCustomers, setDailyEntries, setExpenses, setUdhaarEntries, setRestaurantDaily, setPayments]);
 
   useEffect(() => {
     const handleOnline = () => {
