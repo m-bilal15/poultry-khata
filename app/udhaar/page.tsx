@@ -55,7 +55,7 @@ export default function UdhaarPage() {
     };
     addCustomer(customer);
     if (isOnline) {
-      await supabase.from('customers').insert(customer);
+      await supabase.from('customers').upsert(customer, { onConflict: 'id' });
     } else {
       await queueOperation({ table: 'customers', operation: 'insert', data: customer });
     }
@@ -77,7 +77,7 @@ export default function UdhaarPage() {
     };
     addUdhaarEntry(entry);
     if (isOnline) {
-      await supabase.from('udhaar_entries').insert(entry);
+      await supabase.from('udhaar_entries').upsert(entry, { onConflict: 'id' });
     } else {
       await queueOperation({ table: 'udhaar_entries', operation: 'insert', data: entry });
     }
@@ -97,7 +97,7 @@ export default function UdhaarPage() {
     };
     addUdhaarEntry(entry);
     if (isOnline) {
-      await supabase.from('udhaar_entries').insert(entry);
+      await supabase.from('udhaar_entries').upsert(entry, { onConflict: 'id' });
     } else {
       await queueOperation({ table: 'udhaar_entries', operation: 'insert', data: entry });
     }

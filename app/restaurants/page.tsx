@@ -51,7 +51,7 @@ export default function RestaurantsPage() {
     };
     addCustomer(customer);
     if (isOnline) {
-      await supabase.from('customers').insert(customer);
+      await supabase.from('customers').upsert(customer, { onConflict: 'id' });
     } else {
       await queueOperation({ table: 'customers', operation: 'insert', data: customer });
     }
@@ -71,7 +71,7 @@ export default function RestaurantsPage() {
     };
     addRestaurantDaily(entry);
     if (isOnline) {
-      await supabase.from('restaurant_daily').insert(entry);
+      await supabase.from('restaurant_daily').upsert(entry, { onConflict: 'id' });
     } else {
       await queueOperation({ table: 'restaurant_daily', operation: 'insert', data: entry });
     }
@@ -87,7 +87,7 @@ export default function RestaurantsPage() {
     };
     addPayment(payment);
     if (isOnline) {
-      await supabase.from('payments').insert(payment);
+      await supabase.from('payments').upsert(payment, { onConflict: 'id' });
     } else {
       await queueOperation({ table: 'payments', operation: 'insert', data: payment });
     }

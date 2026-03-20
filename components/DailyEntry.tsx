@@ -89,7 +89,7 @@ export function DailyEntryForm({ date = getToday() }: Props) {
     };
     addExpense(expense);
     if (isOnline) {
-      await supabase.from('expenses').insert(expense);
+      await supabase.from('expenses').upsert(expense, { onConflict: 'id' });
     } else {
       await queueOperation({ table: 'expenses', operation: 'insert', data: expense });
     }

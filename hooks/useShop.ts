@@ -21,7 +21,7 @@ export function useShop() {
     addShop(newShop);
 
     if (isOnline) {
-      const { data, error } = await supabase.from('shops').insert(newShop).select().single();
+      const { data, error } = await supabase.from('shops').upsert(newShop, { onConflict: 'id' }).select().single();
       if (!error && data) return data;
     } else {
       await queueOperation({ table: 'shops', operation: 'insert', data: newShop });
