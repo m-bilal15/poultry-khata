@@ -5,7 +5,7 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 import { OfflineSyncProvider } from "@/components/OfflineSyncProvider";
 
 export const metadata: Metadata = {
-  title: "Safdar & Sons Poultry Traders",
+  title: "صفدر اینڈ سنز — Poultry Khata",
   description: "Daily khata, udhaar, and restaurant management",
   manifest: "/manifest.json",
   appleWebApp: {
@@ -23,11 +23,7 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ur" dir="rtl" className="h-full">
       <head>
@@ -36,7 +32,7 @@ export default function RootLayout({
       <body className="min-h-full">
         <OfflineSyncProvider />
         <OfflineBanner />
-        <main className="max-w-lg mx-auto px-4 pt-4">
+        <main className="max-w-lg mx-auto px-4 pt-5">
           {children}
         </main>
         <NavBar />

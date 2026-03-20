@@ -22,184 +22,151 @@ export function RestaurantCard({ restaurant, dailyEntries, payments, defaultRate
   const [dailyForm, setDailyForm] = useState({ kg: '', rate: defaultRate.toString(), date: getToday() });
   const [payForm, setPayForm] = useState({ amount: '', note: '' });
 
-  const totalCharged = dailyEntries.reduce((sum, e) => sum + e.amount, 0);
-  const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+  const totalCharged = dailyEntries.reduce((s, e) => s + e.amount, 0);
+  const totalPaid = payments.reduce((s, p) => s + p.amount, 0);
   const balance = totalCharged - totalPaid;
+  const isOwed = balance > 0;
 
   const shopName = selectedShop?.name || 'Safdar & Sons';
   const lastEntry = dailyEntries[dailyEntries.length - 1];
 
-  const dailyWaMessage = lastEntry
-    ? restaurantDailyMessage(
-        restaurant.name,
-        lastEntry.kg,
-        lastEntry.rate_per_kg,
-        lastEntry.amount,
-        balance,
-        shopName
-      )
+  const dailyWaMsg = lastEntry
+    ? restaurantDailyMessage(restaurant.name, lastEntry.kg, lastEntry.rate_per_kg, lastEntry.amount, balance, shopName)
     : '';
 
   const now = new Date();
   const monthStr = now.toLocaleString('ur-PK', { month: 'long', year: 'numeric' });
-  const monthlyWaMessage = restaurantMonthlyMessage(
-    restaurant.name,
-    monthStr,
+  const monthlyWaMsg = restaurantMonthlyMessage(
+    restaurant.name, monthStr,
     dailyEntries.reduce((s, e) => s + e.kg, 0),
-    totalCharged,
-    totalPaid,
-    balance
+    totalCharged, totalPaid, balance
   );
 
   const handleAddDaily = () => {
     if (!dailyForm.kg || !selectedShop) return;
-    const kg = parseFloat(dailyForm.kg);
-    const rate = parseFloat(dailyForm.rate) || 0;
-    onAddDaily(restaurant.id, selectedShop.id, kg, rate, dailyForm.date);
+    onAddDaily(restaurant.id, selectedShop.id, parseFloat(dailyForm.kg), parseFloat(dailyForm.rate) || 0, dailyForm.date);
     setDailyForm((f) => ({ ...f, kg: '' }));
   };
 
+  const calcAmount = dailyForm.kg && dailyForm.rate
+    ? parseFloat(dailyForm.kg) * parseFloat(dailyForm.rate)
+    : 0;
+
   return (
-    <div className={`bg-white rounded-2xl shadow-sm overflow-hidden border-l-4 ${balance > 0 ? 'border-orange-400' : 'border-green-400'}`}>
-      {/* Header */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between p-4"
-      >
-        <div className="text-right">
-          <p className="font-bold text-gray-800 text-lg">{restaurant.name}</p>
-          {restaurant.phone && <p className="text-sm text-gray-400">{restaurant.phone}</p>}
-        </div>
-        <div className="text-right">
-          <p className={`font-bold text-xl ${balance > 0 ? 'text-orange-600' : 'text-green-600'}`}>
-            {formatCurrency(Math.abs(balance))}
-          </p>
-          <p className="text-xs text-gray-400">{balance > 0 ? 'بقایا' : 'صاف'}</p>
+    <div className="bg-white rounded-3xl overflow-hidden" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.07)', border: `1px solid ${isOwed ? '#ffedd5' : '#dcfce7'}` }}>
+      <button onClick={() => setExpanded(!expanded)} className="w-full">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-lg"
+              style={{ background: isOwed ? '#fff7ed' : '#f0fdf4', color: isOwed ? '#ea580c' : '#16a34a' }}>
+              {restaurant.name.charAt(0)}
+            </div>
+            <div className="text-right">
+              <p className="font-bold text-gray-800">{restaurant.name}</p>
+              {restaurant.phone && <p className="text-xs text-gray-400">{restaurant.phone}</p>}
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-left">
+              <p className={`font-bold text-xl leading-tight ${isOwed ? 'text-orange-600' : 'text-green-600'}`}>
+                {formatCurrency(Math.abs(balance))}
+              </p>
+              <p className="text-xs text-gray-400 text-right">{isOwed ? 'بقایا' : 'صاف ✓'}</p>
+            </div>
+            <svg className={`w-4 h-4 text-gray-300 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </div>
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 space-y-4 border-t border-gray-100 pt-3">
-          {/* Add daily entry */}
-          <div>
-            <p className="text-sm font-semibold text-gray-600 mb-2 text-right">آج کی خریداری</p>
-            <div className="flex gap-2 flex-wrap">
-              <input
-                type="date"
-                value={dailyForm.date}
-                onChange={(e) => setDailyForm((f) => ({ ...f, date: e.target.value }))}
-                className="border rounded-xl px-3 py-2 text-sm"
-              />
-              <input
-                type="number"
-                inputMode="decimal"
-                value={dailyForm.kg}
-                onChange={(e) => setDailyForm((f) => ({ ...f, kg: e.target.value }))}
-                className="border rounded-xl px-3 py-2 text-sm w-24"
-                placeholder="kg"
-              />
-              <input
-                type="number"
-                inputMode="numeric"
-                value={dailyForm.rate}
-                onChange={(e) => setDailyForm((f) => ({ ...f, rate: e.target.value }))}
-                className="border rounded-xl px-3 py-2 text-sm w-24"
-                placeholder="Rs/kg"
-              />
-              <button
-                onClick={handleAddDaily}
-                className="bg-orange-500 text-white px-4 py-2 rounded-xl font-semibold text-sm"
-              >
-                + شامل
-              </button>
+        <div className="border-t border-gray-50 px-4 pb-4 pt-3 space-y-4">
+          {/* Balance summary */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-2xl p-3 text-center" style={{ background: '#fff7ed' }}>
+              <p className="text-xs text-gray-400">کل رقم</p>
+              <p className="font-bold text-orange-600 text-sm mt-0.5">{formatCurrency(totalCharged)}</p>
             </div>
-            {dailyForm.kg && dailyForm.rate && (
-              <p className="text-sm text-gray-500 mt-1 text-right">
-                {parseFloat(dailyForm.kg)} kg × Rs {parseFloat(dailyForm.rate)} = {formatCurrency(parseFloat(dailyForm.kg) * parseFloat(dailyForm.rate))}
+            <div className="rounded-2xl p-3 text-center" style={{ background: '#f0fdf4' }}>
+              <p className="text-xs text-gray-400">ادائیگی</p>
+              <p className="font-bold text-green-600 text-sm mt-0.5">{formatCurrency(totalPaid)}</p>
+            </div>
+            <div className={`rounded-2xl p-3 text-center`} style={{ background: isOwed ? '#fef2f2' : '#f0fdf4' }}>
+              <p className="text-xs text-gray-400">بقایا</p>
+              <p className={`font-bold text-sm mt-0.5 ${isOwed ? 'text-red-600' : 'text-green-600'}`}>{formatCurrency(Math.abs(balance))}</p>
+            </div>
+          </div>
+
+          {/* Add daily */}
+          <div className="rounded-2xl p-3 space-y-2" style={{ background: '#fff7ed' }}>
+            <p className="text-xs font-bold text-orange-700 text-right">آج کی خریداری</p>
+            <div className="flex gap-2 flex-wrap">
+              <input type="date" value={dailyForm.date}
+                onChange={(e) => setDailyForm((f) => ({ ...f, date: e.target.value }))}
+                className="border border-orange-100 rounded-xl px-3 py-2 text-sm bg-white" />
+              <input type="number" inputMode="decimal" value={dailyForm.kg}
+                onChange={(e) => setDailyForm((f) => ({ ...f, kg: e.target.value }))}
+                className="border border-orange-100 rounded-xl px-3 py-2 text-sm bg-white w-24 font-bold"
+                placeholder="kg" />
+              <input type="number" inputMode="numeric" value={dailyForm.rate}
+                onChange={(e) => setDailyForm((f) => ({ ...f, rate: e.target.value }))}
+                className="border border-orange-100 rounded-xl px-3 py-2 text-sm bg-white w-24 font-bold"
+                placeholder="Rs/kg" />
+            </div>
+            {calcAmount > 0 && (
+              <p className="text-xs text-orange-700 text-right font-semibold">
+                {dailyForm.kg} kg × Rs {dailyForm.rate} = <span className="text-base font-bold">{formatCurrency(calcAmount)}</span>
               </p>
             )}
+            <button onClick={handleAddDaily}
+              className="w-full bg-orange-500 text-white py-2.5 rounded-xl font-bold text-sm"
+              style={{ boxShadow: '0 2px 8px rgba(234,88,12,0.2)' }}>
+              + خریداری شامل کریں
+            </button>
           </div>
 
           {/* Add payment */}
-          <div>
-            <p className="text-sm font-semibold text-green-600 mb-2 text-right">ادائیگی</p>
+          <div className="rounded-2xl p-3 space-y-2" style={{ background: '#f0fdf4' }}>
+            <p className="text-xs font-bold text-green-700 text-right">ادائیگی وصول ہوئی</p>
             <div className="flex gap-2">
-              <input
-                type="number"
-                inputMode="numeric"
-                value={payForm.amount}
+              <input type="number" inputMode="numeric" value={payForm.amount}
                 onChange={(e) => setPayForm((f) => ({ ...f, amount: e.target.value }))}
-                className="border rounded-xl px-3 py-2 text-sm flex-1"
-                placeholder="رقم"
-              />
-              <input
-                value={payForm.note}
+                className="border border-green-100 rounded-xl px-3 py-2 text-sm bg-white flex-1 font-bold"
+                placeholder="رقم" />
+              <input value={payForm.note}
                 onChange={(e) => setPayForm((f) => ({ ...f, note: e.target.value }))}
-                className="border rounded-xl px-3 py-2 text-sm flex-1"
-                placeholder="نوٹ"
-              />
-              <button
-                onClick={() => {
-                  if (payForm.amount) {
-                    onAddPayment(restaurant.id, parseFloat(payForm.amount), payForm.note);
-                    setPayForm({ amount: '', note: '' });
-                  }
-                }}
-                className="bg-green-600 text-white px-4 py-2 rounded-xl font-semibold text-sm"
-              >
-                + ادائیگی
-              </button>
+                className="border border-green-100 rounded-xl px-3 py-2 text-sm bg-white flex-1 text-right"
+                placeholder="نوٹ" />
             </div>
+            <button
+              onClick={() => { if (payForm.amount) { onAddPayment(restaurant.id, parseFloat(payForm.amount), payForm.note); setPayForm({ amount: '', note: '' }); } }}
+              className="w-full bg-green-600 text-white py-2.5 rounded-xl font-bold text-sm"
+              style={{ boxShadow: '0 2px 8px rgba(22,163,74,0.2)' }}>
+              + ادائیگی شامل کریں
+            </button>
           </div>
 
-          {/* WhatsApp buttons */}
+          {/* WhatsApp */}
           {restaurant.phone && (
             <div className="flex gap-2 flex-wrap">
-              {lastEntry && (
-                <WhatsAppButton
-                  phone={restaurant.phone}
-                  message={dailyWaMessage}
-                  label="آج کا حساب"
-                  size="sm"
-                />
-              )}
-              <WhatsAppButton
-                phone={restaurant.phone}
-                message={monthlyWaMessage}
-                label="ماہانہ حساب"
-                size="sm"
-              />
+              {lastEntry && <WhatsAppButton phone={restaurant.phone} message={dailyWaMsg} label="آج کا حساب" size="sm" />}
+              <WhatsAppButton phone={restaurant.phone} message={monthlyWaMsg} label="ماہانہ حساب" size="sm" />
             </div>
           )}
 
-          {/* Balance summary */}
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="bg-orange-50 rounded-xl p-2">
-              <p className="text-xs text-gray-500">کل رقم</p>
-              <p className="font-bold text-orange-600 text-sm">{formatCurrency(totalCharged)}</p>
-            </div>
-            <div className="bg-green-50 rounded-xl p-2">
-              <p className="text-xs text-gray-500">ادائیگی</p>
-              <p className="font-bold text-green-600 text-sm">{formatCurrency(totalPaid)}</p>
-            </div>
-            <div className={`${balance > 0 ? 'bg-red-50' : 'bg-green-50'} rounded-xl p-2`}>
-              <p className="text-xs text-gray-500">بقایا</p>
-              <p className={`font-bold text-sm ${balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                {formatCurrency(Math.abs(balance))}
-              </p>
-            </div>
-          </div>
-
           {/* Recent entries */}
           {dailyEntries.length > 0 && (
-            <div className="space-y-1 max-h-48 overflow-y-auto">
-              <p className="text-xs text-gray-400 font-semibold text-right">حالیہ داخلے</p>
-              {[...dailyEntries].reverse().slice(0, 10).map((entry) => (
-                <div key={entry.id} className="flex items-center justify-between text-sm py-1 border-b border-gray-50">
-                  <span className="text-orange-600 font-semibold">{formatCurrency(entry.amount)}</span>
-                  <span className="text-gray-500 text-xs">{entry.date} — {entry.kg}kg @ Rs{entry.rate_per_kg}</span>
-                </div>
-              ))}
+            <div>
+              <p className="text-xs font-bold text-gray-400 text-right mb-2">حالیہ داخلے</p>
+              <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                {[...dailyEntries].reverse().slice(0, 10).map((entry) => (
+                  <div key={entry.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
+                    <span className="font-bold text-orange-600 text-sm">{formatCurrency(entry.amount)}</span>
+                    <span className="text-xs text-gray-500">{entry.date} — {entry.kg}kg @ Rs{entry.rate_per_kg}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

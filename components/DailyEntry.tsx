@@ -8,17 +8,13 @@ import { queueOperation } from '@/lib/offline';
 import { buildDailySummary, formatCurrency, getToday } from '@/lib/calculations';
 import { DailyEntry as DailyEntryType, Expense } from '@/types';
 
-interface Props {
-  date?: string;
-}
+interface Props { date?: string; }
 
 export function DailyEntryForm({ date = getToday() }: Props) {
   const { selectedShop } = useShop();
   const { dailyEntries, upsertDailyEntry, expenses, addExpense, removeExpense, isOnline } = useStore();
 
-  const existing = dailyEntries.find(
-    (e) => e.shop_id === selectedShop?.id && e.date === date
-  );
+  const existing = dailyEntries.find((e) => e.shop_id === selectedShop?.id && e.date === date);
 
   const [form, setForm] = useState({
     live_weight_kg: existing?.live_weight_kg?.toString() || '',
@@ -27,17 +23,10 @@ export function DailyEntryForm({ date = getToday() }: Props) {
     cash_collected: existing?.cash_collected?.toString() || '',
   });
 
-  const [expForm, setExpForm] = useState({
-    category: 'misc' as Expense['category'],
-    amount: '',
-    note: '',
-  });
-
+  const [expForm, setExpForm] = useState({ category: 'misc' as Expense['category'], amount: '', note: '' });
   const [saved, setSaved] = useState(false);
 
-  const todayExpenses = expenses.filter(
-    (e) => e.shop_id === selectedShop?.id && e.date === date
-  );
+  const todayExpenses = expenses.filter((e) => e.shop_id === selectedShop?.id && e.date === date);
 
   useEffect(() => {
     if (existing) {
@@ -52,7 +41,6 @@ export function DailyEntryForm({ date = getToday() }: Props) {
 
   const handleSave = async () => {
     if (!selectedShop) return;
-
     const entry: DailyEntryType = {
       id: existing?.id || crypto.randomUUID(),
       shop_id: selectedShop.id,
@@ -62,26 +50,18 @@ export function DailyEntryForm({ date = getToday() }: Props) {
       meat_sold_kg: parseFloat(form.meat_sold_kg) || 0,
       cash_collected: parseFloat(form.cash_collected) || 0,
     };
-
     upsertDailyEntry(entry);
-
     if (isOnline) {
       await supabase.from('daily_entries').upsert(entry, { onConflict: 'shop_id,date' });
     } else {
-      await queueOperation({
-        table: 'daily_entries',
-        operation: existing ? 'update' : 'insert',
-        data: entry,
-      });
+      await queueOperation({ table: 'daily_entries', operation: existing ? 'update' : 'insert', data: entry });
     }
-
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
 
   const handleAddExpense = async () => {
     if (!selectedShop || !expForm.amount) return;
-
     const expense: Expense = {
       id: crypto.randomUUID(),
       shop_id: selectedShop.id,
@@ -90,15 +70,12 @@ export function DailyEntryForm({ date = getToday() }: Props) {
       amount: parseFloat(expForm.amount) || 0,
       note: expForm.note,
     };
-
     addExpense(expense);
-
     if (isOnline) {
       await supabase.from('expenses').insert(expense);
     } else {
       await queueOperation({ table: 'expenses', operation: 'insert', data: expense });
     }
-
     setExpForm({ category: 'misc', amount: '', note: '' });
   };
 
@@ -113,8 +90,8 @@ export function DailyEntryForm({ date = getToday() }: Props) {
 
   if (!selectedShop) {
     return (
-      <div className="text-center py-12 text-gray-500">
-        <p className="text-lg">پہلے ایک دکان منتخب کریں</p>
+      <div className="bg-white rounded-3xl p-8 text-center" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+        <p className="text-gray-400 text-lg">پہلے ایک دکان منتخب کریں</p>
       </div>
     );
   }
@@ -131,121 +108,83 @@ export function DailyEntryForm({ date = getToday() }: Props) {
 
   const summary = buildDailySummary(previewEntry, todayExpenses);
 
+  const fields = [
+    { key: 'live_weight_kg', label: 'زندہ وزن (kg)', mode: 'decimal' as const, icon: '⚖️' },
+    { key: 'purchase_cost', label: 'خریداری قیمت (Rs)', mode: 'numeric' as const, icon: '🛒' },
+    { key: 'meat_sold_kg', label: 'فروخت گوشت (kg)', mode: 'decimal' as const, icon: '🍗' },
+    { key: 'cash_collected', label: 'نقد وصولی (Rs)', mode: 'numeric' as const, icon: '💰' },
+  ] as const;
+
   const categoryLabels: Record<Expense['category'], string> = {
-    rent: 'کرایہ',
-    generator: 'جنریٹر',
-    labor: 'مزدوری',
-    misc: 'دیگر',
+    rent: 'کرایہ', generator: 'جنریٹر', labor: 'مزدوری', misc: 'دیگر',
   };
 
   return (
     <div className="space-y-4">
-      {/* Main entry */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-        <h2 className="font-bold text-gray-700 text-lg text-right">روزانہ داخلہ — {selectedShop.name}</h2>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-sm text-gray-500 block mb-1">زندہ وزن (kg)</label>
-            <input
-              type="number"
-              inputMode="decimal"
-              value={form.live_weight_kg}
-              onChange={(e) => setForm((f) => ({ ...f, live_weight_kg: e.target.value }))}
-              className="w-full border rounded-xl px-3 py-3 text-lg font-semibold"
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-gray-500 block mb-1">خریداری قیمت (Rs)</label>
-            <input
-              type="number"
-              inputMode="numeric"
-              value={form.purchase_cost}
-              onChange={(e) => setForm((f) => ({ ...f, purchase_cost: e.target.value }))}
-              className="w-full border rounded-xl px-3 py-3 text-lg font-semibold"
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-gray-500 block mb-1">فروخت شدہ گوشت (kg)</label>
-            <input
-              type="number"
-              inputMode="decimal"
-              value={form.meat_sold_kg}
-              onChange={(e) => setForm((f) => ({ ...f, meat_sold_kg: e.target.value }))}
-              className="w-full border rounded-xl px-3 py-3 text-lg font-semibold"
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-gray-500 block mb-1">نقد وصولی (Rs)</label>
-            <input
-              type="number"
-              inputMode="numeric"
-              value={form.cash_collected}
-              onChange={(e) => setForm((f) => ({ ...f, cash_collected: e.target.value }))}
-              className="w-full border rounded-xl px-3 py-3 text-lg font-semibold"
-              placeholder="0"
-            />
-          </div>
+      {/* Entry form */}
+      <div className="bg-white rounded-3xl p-5" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+        <p className="font-bold text-gray-700 text-right mb-4 text-lg">روزانہ داخلہ — {selectedShop.name}</p>
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {fields.map(({ key, label, mode, icon }) => (
+            <div key={key} className="bg-gray-50 rounded-2xl p-3">
+              <label className="flex items-center justify-end gap-1 text-xs text-gray-500 mb-2 font-medium">
+                {label} <span>{icon}</span>
+              </label>
+              <input
+                type="number"
+                inputMode={mode}
+                value={form[key]}
+                onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+                className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-xl font-bold text-gray-800"
+                placeholder="0"
+              />
+            </div>
+          ))}
         </div>
 
         <button
           onClick={handleSave}
-          className={`w-full py-3 rounded-xl font-bold text-lg transition-all ${
-            saved ? 'bg-green-500 text-white' : 'bg-green-600 text-white active:bg-green-700'
-          }`}
+          className="w-full py-4 rounded-2xl font-bold text-lg text-white transition-all"
+          style={{
+            background: saved ? '#22c55e' : 'linear-gradient(135deg, #16a34a, #15803d)',
+            boxShadow: saved ? '0 4px 12px rgba(34,197,94,0.3)' : '0 4px 12px rgba(22,163,74,0.3)',
+          }}
         >
           {saved ? '✓ محفوظ ہو گیا' : 'محفوظ کریں'}
         </button>
       </div>
 
       {/* Live summary */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-4 shadow-sm">
-        <h3 className="font-bold text-gray-700 mb-3 text-right">آج کا خلاصہ</h3>
+      <div className="rounded-3xl p-5" style={{ background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', boxShadow: '0 2px 16px rgba(22,163,74,0.08)' }}>
+        <p className="font-bold text-green-800 mb-4 text-right">آج کا خلاصہ</p>
         <div className="grid grid-cols-2 gap-3">
-          <SummaryItem
-            label="Yield"
-            value={`${summary.yield_percent}%`}
-            color={summary.yield_percent >= 70 ? 'green' : 'amber'}
-          />
-          <SummaryItem
-            label="مجموعی منافع"
-            value={formatCurrency(summary.gross_profit)}
-            color={summary.gross_profit >= 0 ? 'green' : 'red'}
-          />
-          <SummaryItem
-            label="کل اخراجات"
-            value={formatCurrency(summary.total_expenses)}
-            color="gray"
-          />
-          <SummaryItem
-            label="خالص منافع"
-            value={formatCurrency(summary.net_profit)}
-            color={summary.net_profit >= 0 ? 'green' : 'red'}
-            large
-          />
+          <StatCard label="Yield %" value={`${summary.yield_percent}%`}
+            color={summary.yield_percent >= 70 ? '#16a34a' : '#d97706'} />
+          <StatCard label="مجموعی منافع" value={formatCurrency(summary.gross_profit)}
+            color={summary.gross_profit >= 0 ? '#16a34a' : '#dc2626'} />
+          <StatCard label="اخراجات" value={formatCurrency(summary.total_expenses)} color="#6b7280" />
+          <StatCard label="خالص منافع" value={formatCurrency(summary.net_profit)}
+            color={summary.net_profit >= 0 ? '#16a34a' : '#dc2626'} large />
         </div>
       </div>
 
       {/* Expenses */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-        <h3 className="font-bold text-gray-700 text-right">اخراجات</h3>
+      <div className="bg-white rounded-3xl p-5" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+        <p className="font-bold text-gray-700 text-right mb-4">اخراجات</p>
 
         {todayExpenses.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-2 mb-4">
             {todayExpenses.map((exp) => (
-              <div key={exp.id} className="flex items-center justify-between bg-red-50 rounded-xl px-3 py-2">
-                <button
-                  onClick={() => handleRemoveExpense(exp.id)}
-                  className="text-red-400 text-lg leading-none"
-                >
-                  ✕
+              <div key={exp.id} className="flex items-center justify-between rounded-2xl px-4 py-3" style={{ background: '#fef2f2' }}>
+                <button onClick={() => handleRemoveExpense(exp.id)}
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-red-100 text-red-400">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
                 <div className="text-right">
-                  <span className="text-sm text-gray-500">{categoryLabels[exp.category]}</span>
-                  {exp.note && <span className="text-xs text-gray-400 ml-1">({exp.note})</span>}
+                  <span className="text-sm font-semibold text-gray-700">{categoryLabels[exp.category]}</span>
+                  {exp.note && <span className="text-xs text-gray-400 mr-1"> — {exp.note}</span>}
                 </div>
                 <span className="font-bold text-red-600">{formatCurrency(exp.amount)}</span>
               </div>
@@ -253,36 +192,31 @@ export function DailyEntryForm({ date = getToday() }: Props) {
           </div>
         )}
 
-        <div className="flex gap-2 flex-wrap">
-          <select
-            value={expForm.category}
-            onChange={(e) => setExpForm((f) => ({ ...f, category: e.target.value as Expense['category'] }))}
-            className="border rounded-xl px-3 py-2 text-sm"
-          >
-            <option value="rent">کرایہ</option>
-            <option value="generator">جنریٹر</option>
-            <option value="labor">مزدوری</option>
-            <option value="misc">دیگر</option>
-          </select>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={expForm.amount}
-            onChange={(e) => setExpForm((f) => ({ ...f, amount: e.target.value }))}
-            className="border rounded-xl px-3 py-2 text-sm w-28"
-            placeholder="رقم"
-          />
-          <input
-            value={expForm.note}
-            onChange={(e) => setExpForm((f) => ({ ...f, note: e.target.value }))}
-            className="border rounded-xl px-3 py-2 text-sm flex-1 min-w-0"
-            placeholder="نوٹ"
-          />
-          <button
-            onClick={handleAddExpense}
-            className="bg-red-500 text-white px-4 py-2 rounded-xl font-semibold text-sm"
-          >
-            + شامل
+        <div className="bg-gray-50 rounded-2xl p-3 space-y-2">
+          <div className="flex gap-2">
+            <select
+              value={expForm.category}
+              onChange={(e) => setExpForm((f) => ({ ...f, category: e.target.value as Expense['category'] }))}
+              className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white flex-shrink-0"
+            >
+              <option value="rent">کرایہ</option>
+              <option value="generator">جنریٹر</option>
+              <option value="labor">مزدوری</option>
+              <option value="misc">دیگر</option>
+            </select>
+            <input type="number" inputMode="numeric" value={expForm.amount}
+              onChange={(e) => setExpForm((f) => ({ ...f, amount: e.target.value }))}
+              className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white w-28 font-semibold"
+              placeholder="رقم" />
+            <input value={expForm.note}
+              onChange={(e) => setExpForm((f) => ({ ...f, note: e.target.value }))}
+              className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white flex-1 min-w-0 text-right"
+              placeholder="نوٹ (اختیاری)" />
+          </div>
+          <button onClick={handleAddExpense}
+            className="w-full bg-red-500 text-white py-2.5 rounded-xl font-bold text-sm"
+            style={{ boxShadow: '0 2px 8px rgba(220,38,38,0.2)' }}>
+            + خرچہ شامل کریں
           </button>
         </div>
       </div>
@@ -290,28 +224,11 @@ export function DailyEntryForm({ date = getToday() }: Props) {
   );
 }
 
-function SummaryItem({
-  label,
-  value,
-  color,
-  large,
-}: {
-  label: string;
-  value: string;
-  color: 'green' | 'red' | 'amber' | 'gray';
-  large?: boolean;
-}) {
-  const colors = {
-    green: 'text-green-700',
-    red: 'text-red-600',
-    amber: 'text-amber-600',
-    gray: 'text-gray-600',
-  };
-
+function StatCard({ label, value, color, large }: { label: string; value: string; color: string; large?: boolean }) {
   return (
-    <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-      <p className="text-xs text-gray-500 mb-1">{label}</p>
-      <p className={`font-bold ${large ? 'text-xl' : 'text-lg'} ${colors[color]}`}>{value}</p>
+    <div className="bg-white rounded-2xl p-3.5 text-center" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+      <p className="text-xs text-gray-400 font-medium mb-1">{label}</p>
+      <p className={`font-bold leading-tight ${large ? 'text-2xl' : 'text-lg'}`} style={{ color }}>{value}</p>
     </div>
   );
 }

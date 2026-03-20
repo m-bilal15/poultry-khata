@@ -10,10 +10,9 @@ import { formatCurrency, buildDailySummary } from '@/lib/calculations';
 
 export default function KhataPage() {
   const [selectedDate, setSelectedDate] = useState(getToday());
-  const { dailyEntries, expenses, shops } = useStore();
+  const { dailyEntries, expenses } = useStore();
   const { selectedShop } = useShop();
 
-  // Weekly summary
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - i);
@@ -22,59 +21,58 @@ export default function KhataPage() {
 
   return (
     <div className="space-y-4">
+      {/* Page header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-800">روزانہ خاتہ</h1>
         <input
           type="date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="border rounded-xl px-3 py-2 text-sm"
+          className="bg-white border border-gray-200 rounded-2xl px-4 py-2.5 text-sm font-semibold"
           max={getToday()}
         />
+        <h1 className="text-xl font-bold text-gray-800">روزانہ خاتہ</h1>
       </div>
 
       <ShopSelector />
-
       <DailyEntryForm date={selectedDate} />
 
       {/* Weekly overview */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm">
-        <h2 className="font-bold text-gray-700 mb-3 text-right">ہفتہ وار خلاصہ</h2>
+      <div className="bg-white rounded-3xl p-5" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+        <p className="font-bold text-gray-700 mb-4 text-right">ہفتہ وار خلاصہ</p>
         <div className="space-y-1">
           {last7Days.map((date) => {
             const shopId = selectedShop?.id;
             if (!shopId) return null;
             const entry = dailyEntries.find((e) => e.shop_id === shopId && e.date === date);
             const dayExpenses = expenses.filter((e) => e.shop_id === shopId && e.date === date);
-
             const dayLabel = new Date(date + 'T00:00:00').toLocaleDateString('ur-PK', {
-              weekday: 'short',
-              day: 'numeric',
-              month: 'short',
+              weekday: 'short', day: 'numeric', month: 'short',
             });
+
+            const isSelected = date === selectedDate;
 
             if (!entry) {
               return (
-                <div key={date} className="flex items-center justify-between py-2 border-b border-gray-50">
-                  <span className="text-gray-300 text-sm">—</span>
-                  <span className="text-gray-400 text-sm">{dayLabel}</span>
+                <div key={date} className={`flex items-center justify-between px-3 py-2.5 rounded-2xl ${isSelected ? 'bg-green-50' : ''}`}>
+                  <span className="text-gray-300 text-sm font-semibold">—</span>
+                  <span className={`text-sm ${isSelected ? 'text-green-700 font-bold' : 'text-gray-400'}`}>{dayLabel}</span>
                 </div>
               );
             }
 
             const summary = buildDailySummary(entry, dayExpenses);
+            const profit = summary.net_profit;
+
             return (
               <button
                 key={date}
                 onClick={() => setSelectedDate(date)}
-                className={`w-full flex items-center justify-between py-2 border-b border-gray-50 ${
-                  date === selectedDate ? 'bg-green-50 rounded-xl px-2' : ''
-                }`}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-2xl transition-all ${isSelected ? 'bg-green-50' : 'hover:bg-gray-50'}`}
               >
-                <span className={`font-bold ${summary.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatCurrency(summary.net_profit)}
+                <span className={`font-bold text-base ${profit >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  {formatCurrency(profit)}
                 </span>
-                <span className="text-gray-600 text-sm">{dayLabel}</span>
+                <span className={`text-sm ${isSelected ? 'text-green-700 font-bold' : 'text-gray-500'}`}>{dayLabel}</span>
               </button>
             );
           })}

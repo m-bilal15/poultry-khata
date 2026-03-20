@@ -107,45 +107,49 @@ export default function UdhaarPage() {
       <div className="flex items-center justify-between">
         <button
           onClick={() => setShowAddCustomer(true)}
-          className="bg-green-600 text-white px-4 py-2 rounded-xl font-semibold text-sm"
+          className="flex items-center gap-1.5 bg-green-600 text-white px-4 py-2.5 rounded-2xl font-bold text-sm"
+          style={{ boxShadow: '0 4px 12px rgba(22,163,74,0.3)' }}
         >
-          + گاہک
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+          گاہک
         </button>
         <h1 className="text-xl font-bold text-gray-800">ادھار کھاتہ</h1>
       </div>
 
       {/* Total outstanding */}
-      <div className="bg-red-50 rounded-2xl p-4 text-right">
-        <p className="text-gray-500 text-sm">کل بقایا ادھار</p>
-        <p className="text-3xl font-bold text-red-600">{formatCurrency(totalOutstanding)}</p>
-        <p className="text-xs text-gray-400">{sorted.filter((c) => getCustomerBalance(c.id) > 0).length} گاہک باقی ہیں</p>
+      <div className="rounded-3xl p-5 text-right" style={{ background: 'linear-gradient(135deg, #fef2f2, #fee2e2)', border: '1px solid #fecaca' }}>
+        <p className="text-red-400 text-sm font-medium">کل بقایا ادھار</p>
+        <p className="text-4xl font-bold text-red-600 mt-1">{formatCurrency(totalOutstanding)}</p>
+        <p className="text-red-400 text-xs mt-1">{sorted.filter((c) => getCustomerBalance(c.id) > 0).length} گاہک باقی ہیں</p>
       </div>
 
       {/* Search */}
       {individualCustomers.length > 3 && (
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full border rounded-xl px-4 py-3 text-right"
-          placeholder="نام یا نمبر سے تلاش کریں..."
-        />
+        <div className="relative">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-right"
+            placeholder="نام یا نمبر سے تلاش کریں..."
+          />
+        </div>
       )}
 
-      {/* Add customer modal */}
+      {/* Add customer form */}
       {showAddCustomer && (
-        <div className="bg-white rounded-2xl p-4 shadow-lg border border-green-200">
-          <h2 className="font-bold text-gray-700 mb-3 text-right">نیا گاہک</h2>
+        <div className="bg-white rounded-3xl p-5" style={{ boxShadow: '0 4px 24px rgba(22,163,74,0.15)', border: '1px solid #bbf7d0' }}>
+          <p className="font-bold text-gray-700 mb-4 text-right text-lg">نیا گاہک شامل کریں</p>
           <input
             value={newCustomer.name}
             onChange={(e) => setNewCustomer((f) => ({ ...f, name: e.target.value }))}
-            className="w-full border rounded-xl px-3 py-3 mb-2 text-right"
+            className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 mb-3 text-right text-base"
             placeholder="نام *"
             autoFocus
           />
           <input
             value={newCustomer.phone}
             onChange={(e) => setNewCustomer((f) => ({ ...f, phone: e.target.value }))}
-            className="w-full border rounded-xl px-3 py-3 mb-3"
+            className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 mb-4 text-base"
             placeholder="WhatsApp نمبر (اختیاری)"
             type="tel"
             dir="ltr"
@@ -153,26 +157,25 @@ export default function UdhaarPage() {
           <div className="flex gap-2">
             <button
               onClick={() => { setShowAddCustomer(false); setNewCustomer({ name: '', phone: '' }); }}
-              className="flex-1 border border-gray-300 text-gray-500 py-3 rounded-xl font-semibold"
-            >
-              منسوخ
-            </button>
+              className="flex-1 bg-gray-100 text-gray-600 py-3.5 rounded-2xl font-bold"
+            >منسوخ</button>
             <button
               onClick={handleAddCustomer}
-              className="flex-1 bg-green-600 text-white py-3 rounded-xl font-semibold"
-            >
-              محفوظ کریں
-            </button>
+              className="flex-1 bg-green-600 text-white py-3.5 rounded-2xl font-bold"
+              style={{ boxShadow: '0 4px 12px rgba(22,163,74,0.3)' }}
+            >محفوظ کریں</button>
           </div>
         </div>
       )}
 
       {/* Customer list */}
       {sorted.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
-          <p className="text-5xl mb-3">📋</p>
-          <p>کوئی گاہک نہیں</p>
-          <p className="text-sm">اوپر + گاہک بٹن سے شامل کریں</p>
+        <div className="bg-white rounded-3xl p-12 text-center" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+          </div>
+          <p className="text-gray-500 font-semibold">کوئی گاہک نہیں</p>
+          <p className="text-gray-400 text-sm mt-1">اوپر + گاہک بٹن سے شامل کریں</p>
         </div>
       ) : (
         <div className="space-y-3">
