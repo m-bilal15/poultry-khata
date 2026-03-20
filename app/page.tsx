@@ -1,7 +1,6 @@
 'use client';
 
 import { useStore } from '@/store/useStore';
-import { useShop } from '@/hooks/useShop';
 import { useT } from '@/hooks/useT';
 import { ShopSelector } from '@/components/ShopSelector';
 import { DashboardSkeleton } from '@/components/Skeleton';
