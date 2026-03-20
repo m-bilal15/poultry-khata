@@ -70,44 +70,60 @@ export function ShopSelector() {
   }
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      {shops.map((shop) => (
-        <button
-          key={shop.id}
-          onClick={() => setSelectedShop(shop.id)}
-          className={`px-5 py-2.5 rounded-2xl font-bold text-sm transition-all ${
-            selectedShop?.id === shop.id
-              ? 'bg-green-600 text-white'
-              : 'bg-white text-gray-600 border border-gray-200'
-          }`}
-          style={selectedShop?.id === shop.id ? { boxShadow: '0 4px 12px rgba(22,163,74,0.25)' } : {}}
-        >
-          {shop.name}
-        </button>
-      ))}
-      {!showAdd ? (
-        <button
-          onClick={() => setShowAdd(true)}
-          className="px-4 py-2.5 rounded-2xl bg-white border border-dashed border-gray-300 text-gray-400 text-sm font-semibold"
-        >
-          {t('addShopShort')}
-        </button>
-      ) : (
-        <div className="flex items-center gap-2 bg-white rounded-2xl p-2 border border-green-200 flex-1 min-w-0">
-          <button onClick={() => { setShowAdd(false); setNewName(''); }} className="text-gray-300 p-1">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+    <div className="space-y-3">
+      {/* Shop tabs + add button */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {shops.map((shop) => (
+          <button
+            key={shop.id}
+            onClick={() => setSelectedShop(shop.id)}
+            className={`px-5 py-2.5 rounded-2xl font-bold text-sm transition-all ${
+              selectedShop?.id === shop.id
+                ? 'bg-green-600 text-white'
+                : 'bg-white text-gray-600 border border-gray-200'
+            }`}
+            style={selectedShop?.id === shop.id ? { boxShadow: '0 4px 12px rgba(22,163,74,0.25)' } : {}}
+          >
+            {shop.name}
           </button>
+        ))}
+        <button
+          onClick={() => setShowAdd((v) => !v)}
+          className={`px-4 py-2.5 rounded-2xl text-sm font-semibold border transition-all ${
+            showAdd
+              ? 'bg-gray-100 text-gray-500 border-gray-200'
+              : 'bg-white border-dashed border-gray-300 text-gray-400'
+          }`}
+        >
+          {showAdd ? t('cancel') : t('addShopShort')}
+        </button>
+      </div>
+
+      {/* Expanded add form — appears below tabs, never overlaps */}
+      {showAdd && (
+        <div className="bg-white rounded-3xl p-4 border border-green-100" style={{ boxShadow: '0 4px 16px rgba(22,163,74,0.12)' }}>
+          <p className="font-bold text-gray-700 mb-3 text-sm">{t('newShop')}</p>
           <input
-            className="flex-1 min-w-0 text-sm bg-transparent outline-none px-1"
-            placeholder={t('shopName')}
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 mb-2 text-sm bg-gray-50"
+            placeholder={t('shopNameReq')}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
             autoFocus
           />
-          <button onClick={handleAdd} className="bg-green-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold shrink-0">
-            {t('add')}
+          <input
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 mb-3 text-sm bg-gray-50"
+            placeholder={t('address')}
+            value={newAddress}
+            onChange={(e) => setNewAddress(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          />
+          <button
+            onClick={handleAdd}
+            className="w-full bg-green-600 text-white py-3 rounded-2xl font-bold text-sm"
+            style={{ boxShadow: '0 4px 12px rgba(22,163,74,0.3)' }}
+          >
+            {t('save')}
           </button>
         </div>
       )}
