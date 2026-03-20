@@ -9,6 +9,8 @@ export function useOfflineSync() {
   const { setIsOnline, isOnline, shops, setShops, setCustomers, setUdhaarEntries, setRestaurantDaily, setPayments } = useStore();
 
   const syncPending = useCallback(async () => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    if (!url || url.includes('placeholder')) return;
     const pending = await getPendingOperations();
     for (const op of pending) {
       try {
@@ -28,6 +30,8 @@ export function useOfflineSync() {
   }, []);
 
   const loadFromSupabase = useCallback(async () => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    if (!url || url.includes('placeholder')) return;
     try {
       const [shopsRes, customersRes] = await Promise.all([
         supabase.from('shops').select('*').order('created_at'),

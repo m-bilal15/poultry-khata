@@ -3,7 +3,8 @@
 import { useStore } from '@/store/useStore';
 
 export function LangToggle() {
-  const { lang, setLang } = useStore((s) => ({ lang: s.lang, setLang: s.setLang }));
+  const lang = useStore((s) => s.lang);
+  const setLang = useStore((s) => s.setLang);
 
   return (
     <button
