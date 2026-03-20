@@ -9,6 +9,7 @@ export function useOfflineSync() {
   const {
     setIsOnline,
     isOnline,
+    setIsLoading,
     setShops,
     setCustomers,
     setDailyEntries,
@@ -41,7 +42,7 @@ export function useOfflineSync() {
 
   const loadFromSupabase = useCallback(async () => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    if (!url || url.includes('placeholder')) return;
+    if (!url || url.includes('placeholder')) { setIsLoading(false); return; }
     try {
       const [shopsRes, customersRes, entriesRes, expensesRes, udhaarRes, restDailyRes, paymentsRes] =
         await Promise.all([
@@ -64,8 +65,10 @@ export function useOfflineSync() {
       if (paymentsRes.data && paymentsRes.data.length > 0) setPayments(paymentsRes.data);
     } catch (err) {
       console.error('Load error:', err);
+    } finally {
+      setIsLoading(false);
     }
-  }, [setShops, setCustomers, setDailyEntries, setExpenses, setUdhaarEntries, setRestaurantDaily, setPayments]);
+  }, [setIsLoading, setShops, setCustomers, setDailyEntries, setExpenses, setUdhaarEntries, setRestaurantDaily, setPayments]);
 
   useEffect(() => {
     const handleOnline = () => {

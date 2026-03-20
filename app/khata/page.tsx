@@ -7,12 +7,15 @@ import { getToday, formatCurrency, buildDailySummary } from '@/lib/calculations'
 import { useStore } from '@/store/useStore';
 import { useShop } from '@/hooks/useShop';
 import { useT } from '@/hooks/useT';
+import { KhataSkeleton } from '@/components/Skeleton';
 
 export default function KhataPage() {
   const [selectedDate, setSelectedDate] = useState(getToday());
-  const { dailyEntries, expenses } = useStore();
+  const { dailyEntries, expenses, isLoading, shops } = useStore();
   const { selectedShop } = useShop();
   const { t, lang } = useT();
+
+  if (isLoading && shops.length === 0) return <KhataSkeleton />;
 
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();

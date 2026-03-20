@@ -6,12 +6,15 @@ import { useShop } from '@/hooks/useShop';
 import { ShopSelector } from '@/components/ShopSelector';
 import { formatCurrency, formatKg, buildDailySummary, getMonthRange, getWeekRange } from '@/lib/calculations';
 import { useT } from '@/hooks/useT';
+import { ReportsSkeleton } from '@/components/Skeleton';
 
 type Period = 'week' | 'month' | 'all';
 
 export default function ReportsPage() {
   const [period, setPeriod] = useState<Period>('month');
-  const { shops, dailyEntries, expenses, customers, udhaarEntries, restaurantDaily, payments } = useStore();
+  const { shops, dailyEntries, expenses, customers, udhaarEntries, restaurantDaily, payments, isLoading } = useStore();
+
+  if (isLoading && shops.length === 0) return <ReportsSkeleton />;
   const { selectedShop } = useShop();
   const { t } = useT();
 

@@ -8,6 +8,7 @@ import { queueOperation } from '@/lib/offline';
 import { Customer, UdhaarEntry } from '@/types';
 import { formatCurrency, getToday } from '@/lib/calculations';
 import { useT } from '@/hooks/useT';
+import { ListSkeleton } from '@/components/Skeleton';
 
 export default function UdhaarPage() {
   const {
@@ -19,7 +20,11 @@ export default function UdhaarPage() {
   } = useStore();
 
   const { t } = useT();
+  const isLoading = useStore((s) => s.isLoading);
+
   const [showAddCustomer, setShowAddCustomer] = useState(false);
+
+  if (isLoading && customers.length === 0) return <ListSkeleton count={4} />;
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '' });
   const [search, setSearch] = useState('');
 

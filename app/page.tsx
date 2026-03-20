@@ -4,13 +4,16 @@ import { useStore } from '@/store/useStore';
 import { useShop } from '@/hooks/useShop';
 import { useT } from '@/hooks/useT';
 import { ShopSelector } from '@/components/ShopSelector';
+import { DashboardSkeleton } from '@/components/Skeleton';
 import { formatCurrency, getToday, buildDailySummary } from '@/lib/calculations';
 import Link from 'next/link';
 
 export default function Dashboard() {
-  const { shops, dailyEntries, expenses, udhaarEntries, customers, restaurantDaily, payments } = useStore();
+  const { shops, dailyEntries, expenses, udhaarEntries, customers, restaurantDaily, payments, isLoading } = useStore();
   const { t, lang } = useT();
   const today = getToday();
+
+  if (isLoading && shops.length === 0) return <DashboardSkeleton />;
 
   const todayNetProfit = shops.reduce((total, shop) => {
     const entry = dailyEntries.find((e) => e.shop_id === shop.id && e.date === today);

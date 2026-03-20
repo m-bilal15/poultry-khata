@@ -56,6 +56,10 @@ interface AppState {
   // Online status
   isOnline: boolean;
   setIsOnline: (online: boolean) => void;
+
+  // Loading state (not persisted — resets on every page load)
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -119,6 +123,9 @@ export const useStore = create<AppState>()(
 
       isOnline: true,
       setIsOnline: (isOnline) => set({ isOnline }),
+
+      isLoading: true,
+      setIsLoading: (isLoading) => set({ isLoading }),
     }),
     {
       name: 'poultry-khata-store',

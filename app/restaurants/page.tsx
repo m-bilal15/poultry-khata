@@ -10,9 +10,11 @@ import { Customer, RestaurantDaily, Payment } from '@/types';
 import { formatCurrency, getToday } from '@/lib/calculations';
 import { useT } from '@/hooks/useT';
 import { useShop } from '@/hooks/useShop';
+import { ListSkeleton } from '@/components/Skeleton';
 
 export default function RestaurantsPage() {
   const { t } = useT();
+  const isLoading = useStore((s) => s.isLoading);
   const {
     customers,
     restaurantDaily,
@@ -28,6 +30,8 @@ export default function RestaurantsPage() {
   const [newRest, setNewRest] = useState({ name: '', phone: '', address: '', rate: '' });
 
   const restaurants = customers.filter((c) => c.type === 'restaurant');
+
+  if (isLoading && restaurants.length === 0) return <ListSkeleton count={3} />;
 
   const getRestaurantBalance = (id: string) => {
     const charged = restaurantDaily.filter((e) => e.customer_id === id).reduce((s, e) => s + e.amount, 0);
