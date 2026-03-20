@@ -1,5 +1,5 @@
 // Service Worker for PWA offline support
-const CACHE_NAME = 'poultry-khata-v1';
+const CACHE_NAME = 'poultry-khata-v2';
 const STATIC_ASSETS = [
   '/',
   '/khata',
